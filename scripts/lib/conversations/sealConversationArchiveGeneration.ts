@@ -42,11 +42,9 @@ export const sealConversationArchiveGeneration = async (
   try {
     const hashes: string[] = []
     for await (const text of options.baseSegments) {
-      // typescript-eslint infers `any` for `for await` over this union once it
-      // comes through a named interface; the value is a string either way.
       const result = await publishConversationSegment({
         segmentsDirectory: stagedSegments,
-        text: String(text),
+        text,
       })
       hashes.push(result.sha256)
     }

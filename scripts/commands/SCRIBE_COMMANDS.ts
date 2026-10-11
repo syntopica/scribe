@@ -40,6 +40,23 @@ export const SCRIBE_COMMANDS: Readonly<Record<string, ScribeCommand>> = {
     summary: 'Verify a v2 segment store (--root)',
     load: () => import('./conversationsVerifySegments'),
   },
+  'segments-inventory': {
+    summary:
+      'Print generationId, segments and pendingDeliveries of a store (--root)',
+    load: () => import('./conversationsSegmentsInventory'),
+  },
+  'export-pending': {
+    summary: 'Write the pending Atrium slice as an export (--root, --output)',
+    load: () => import('./conversationsExportPending'),
+  },
+  'ack-pending': {
+    summary: 'Clear pending deliveries an ingested slice satisfied (--slice)',
+    load: () => import('./conversationsAckPending'),
+  },
+  'export-materialized': {
+    summary: 'Write the full materialized export of a store (--root, --output)',
+    load: () => import('./conversationsExportMaterialized'),
+  },
   'benchmark-segments': {
     summary: 'Acceptance benchmark of the segment format, synthetic data only',
     load: () => import('./conversationsBenchmarkSegments'),

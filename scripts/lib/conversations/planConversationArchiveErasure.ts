@@ -1,6 +1,6 @@
 import { hashConversationSegmentSet } from './hashConversationSegmentSet'
 import type { ConversationErasurePlan } from './types/ConversationErasurePlan'
-import type { ConversationFragmentEntry } from './types/ConversationFragmentEntry'
+import type { ConversationFragmentReference } from './types/ConversationFragmentReference'
 
 /**
  * Say what an erasure would remove, before anything is removed.
@@ -16,7 +16,7 @@ import type { ConversationFragmentEntry } from './types/ConversationFragmentEntr
  * erasure that finds its target already gone is a success, not a failure.
  */
 export const planConversationArchiveErasure = (options: {
-  entries: ConversationFragmentEntry[]
+  entries: readonly ConversationFragmentReference[]
   segmentSha256: string[]
   fromGenerationId: string
   createdAt: string
@@ -27,28 +27,26 @@ export const planConversationArchiveErasure = (options: {
   const removedFragments = new Set(options.removeFragmentSha256 ?? [])
   const removedConversations = new Set(options.removeConversationIds ?? [])
 
-  const byConversation = new Map<string, ConversationFragmentEntry[]>()
+  const byConversation = new Map<string, string[]>()
   for (const entry of options.entries) {
-    byConversation.set(entry.conversationId, [
-      ...(byConversation.get(entry.conversationId) ?? []),
-      entry,
-    ])
+    const hashes = byConversation.get(entry.conversationId) ?? []
+    hashes.push(entry.fragmentSha256)
+    byConversation.set(entry.conversationId, hashes)
   }
 
   const conversations = [...byConversation.entries()]
     .toSorted(([left], [right]) => left.localeCompare(right))
-    .flatMap(([conversationId, entries]) => {
+    .flatMap(([conversationId, hashes]) => {
       const whole = removedConversations.has(conversationId)
-      const removed = entries
-        .filter((entry) => whole || removedFragments.has(entry.fragmentSha256))
-        .map((entry) => entry.fragmentSha256)
+      const removed = [...new Set(hashes)]
+        .filter((hash) => whole || removedFragments.has(hash))
         .toSorted((left, right) => left.localeCompare(right))
       if (removed.length === 0) return []
       return [
         {
           conversationId,
           removedFragmentSha256: removed,
-          removesConversation: removed.length === entries.length,
+          removesConversation: removed.length === new Set(hashes).size,
         },
       ]
     })
@@ -60,6 +58,7 @@ export const planConversationArchiveErasure = (options: {
     segmentSetSha256: hashConversationSegmentSet(options.segmentSha256),
     createdAt: options.createdAt,
     reason: options.reason,
+    conversationIds: conversations.map((entry) => entry.conversationId),
     conversations,
   }
 }

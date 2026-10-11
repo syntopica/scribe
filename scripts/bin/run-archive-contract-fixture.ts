@@ -1,10 +1,21 @@
 import { join } from 'node:path'
 import { ARCHIVE_CONTRACT_FIXTURE_ROOT } from '../lib/conversations/constants/ARCHIVE_CONTRACT_FIXTURE_ROOT'
 import { writeArchiveContractFixture } from '../lib/conversations/writeArchiveContractFixture'
+import { writeArchiveContractSliceFixture } from '../lib/conversations/writeArchiveContractSliceFixture'
+import { writeErasurePlanContractFixture } from '../lib/conversations/writeErasurePlanContractFixture'
 import { reportUnexpectedFailure } from '../lib/reportUnexpectedFailure'
 
-writeArchiveContractFixture(
-  join(ARCHIVE_CONTRACT_FIXTURE_ROOT, 'export.jsonl'),
-).catch((error: unknown) => {
-  reportUnexpectedFailure('Contract fixture write failed unexpectedly', error)
-})
+writeArchiveContractFixture(join(ARCHIVE_CONTRACT_FIXTURE_ROOT, 'export.jsonl'))
+  .then(async () =>
+    writeArchiveContractSliceFixture(
+      join(ARCHIVE_CONTRACT_FIXTURE_ROOT, 'pending-slice.jsonl'),
+    ),
+  )
+  .then(async () =>
+    writeErasurePlanContractFixture(
+      join(ARCHIVE_CONTRACT_FIXTURE_ROOT, 'erasure-plan.json'),
+    ),
+  )
+  .catch((error: unknown) => {
+    reportUnexpectedFailure('Contract fixture write failed unexpectedly', error)
+  })

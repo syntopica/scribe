@@ -73,5 +73,9 @@ export const openConversationArchiveState = async (options: {
     replayed++
   }
   for (const id of touched) state.materialize(id)
+  // A segment replayed here arrived from somewhere other than this process --
+  // a sync, a seed, a capture whose state was lost -- so Atrium has not been
+  // handed what it changed either.
+  state.markPending([...touched])
   return { state, replayed, rebuilt, touched: [...touched] }
 }
