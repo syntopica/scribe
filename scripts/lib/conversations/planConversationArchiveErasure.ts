@@ -1,4 +1,4 @@
-import { hashText } from './hashText'
+import { hashConversationSegmentSet } from './hashConversationSegmentSet'
 import type { ConversationErasurePlan } from './types/ConversationErasurePlan'
 import type { ConversationFragmentEntry } from './types/ConversationFragmentEntry'
 
@@ -57,11 +57,7 @@ export const planConversationArchiveErasure = (options: {
     kind: 'rocket-agents-conversation-erasure-plan',
     schemaVersion: 2,
     fromGenerationId: options.fromGenerationId,
-    segmentSetSha256: hashText(
-      [...options.segmentSha256]
-        .toSorted((left, right) => left.localeCompare(right))
-        .join('\n'),
-    ),
+    segmentSetSha256: hashConversationSegmentSet(options.segmentSha256),
     createdAt: options.createdAt,
     reason: options.reason,
     conversations,

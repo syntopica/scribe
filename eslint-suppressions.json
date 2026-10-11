@@ -94,11 +94,6 @@
       "count": 1
     }
   },
-  "scripts/lib/conversations/initializeConversationArchiveGeneration.ts": {
-    "code-policy/no-inline-types-in-runtime-files": {
-      "count": 1
-    }
-  },
   "scripts/lib/conversations/migrateConversationArchiveToSegments.ts": {
     "code-policy/no-inline-types-in-runtime-files": {
       "count": 1
@@ -131,7 +126,7 @@
   },
   "scripts/lib/conversations/readConversationArchiveGeneration.ts": {
     "code-policy/no-inline-types-in-runtime-files": {
-      "count": 2
+      "count": 1
     }
   },
   "scripts/lib/conversations/readConversationArchiveSegment.ts": {
