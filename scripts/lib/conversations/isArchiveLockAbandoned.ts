@@ -1,4 +1,5 @@
 import { promises as fs } from 'node:fs'
+import { isProcessGone } from './isProcessGone'
 
 /**
  * Decide whether a lock file left on disk belongs to a writer that is gone.
@@ -29,12 +30,5 @@ export const isArchiveLockAbandoned = async (lock: string) => {
   if (text === undefined) return true
   const pid = Number.parseInt(text.trim().split('\n')[0] ?? '', 10)
   if (!Number.isInteger(pid) || pid <= 0) return false
-  try {
-    process.kill(pid, 0)
-    return false
-  } catch (error) {
-    // EPERM means the process exists and belongs to someone else, which is
-    // still a live holder. Only ESRCH says nothing is there.
-    return (error as NodeJS.ErrnoException).code === 'ESRCH'
-  }
+  return isProcessGone(pid)
 }

@@ -6,6 +6,7 @@ import { ConversationArchiveChangedError } from './ConversationArchiveChangedErr
 import { ConversationCaptureStore } from './ConversationCaptureStore'
 import { pruneConversationArchiveBackups } from './pruneConversationArchiveBackups'
 import { readArchiveRevision } from './readArchiveRevision'
+import { removeAbandonedArchiveTemporaries } from './removeAbandonedArchiveTemporaries'
 import { rewriteConversationRecord } from './rewriteConversationRecord'
 import { streamConversationExport } from './streamConversationExport'
 import type { ConversationRewriteChanges } from './types/ConversationRewriteChanges'
@@ -120,7 +121,13 @@ export const rewriteConversationArchive = async (options: {
 
     let backup: string | undefined
     let prunedBackups: string[] = []
+    let removedTemporaries: string[] = []
     const manifest = await withArchiveWriteLock(options.archive, async () => {
+      // Under the write lock, so the only writers left to find are dead
+      // ones; a temporary whose process is gone will never be renamed.
+      removedTemporaries = await removeAbandonedArchiveTemporaries(
+        options.archive,
+      )
       if ((await readArchiveRevision(options.archive)) !== mergedFrom)
         throw new ConversationArchiveChangedError(options.archive)
       backup = await backupConversationArchive(
@@ -178,6 +185,7 @@ export const rewriteConversationArchive = async (options: {
         contentSha256: manifest.contentSha256,
         ...(backup === undefined ? {} : { backup }),
         ...(prunedBackups.length === 0 ? {} : { prunedBackups }),
+        ...(removedTemporaries.length === 0 ? {} : { removedTemporaries }),
       },
     )
   } finally {

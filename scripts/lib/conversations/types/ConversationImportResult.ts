@@ -8,5 +8,6 @@ export interface ConversationImportResult {
   archive: string
   backup?: string
   prunedBackups?: string[]
+  removedTemporaries?: string[]
   errors: string[]
 }

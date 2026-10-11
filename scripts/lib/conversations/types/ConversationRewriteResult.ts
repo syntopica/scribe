@@ -8,6 +8,7 @@ export interface ConversationRewriteResult {
   changes: ConversationRewriteChanges
   backup?: string
   prunedBackups?: string[]
+  removedTemporaries?: string[]
   contentSha256?: string
   errors: string[]
 }

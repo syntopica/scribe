@@ -7,6 +7,7 @@ import { ConversationCaptureStore } from './ConversationCaptureStore'
 import { loadConversationExportStore } from './loadConversationExportStore'
 import { pruneConversationArchiveBackups } from './pruneConversationArchiveBackups'
 import { readArchiveRevision } from './readArchiveRevision'
+import { removeAbandonedArchiveTemporaries } from './removeAbandonedArchiveTemporaries'
 import type { ConversationImportResult } from './types/ConversationImportResult'
 import { withArchiveWriteLock } from './withArchiveWriteLock'
 import { writeConversationExportFromStore } from './writeConversationExportFromStore'
@@ -66,8 +67,14 @@ export const importConversationExport = async (options: {
 
     let backup: string | undefined
     let prunedBackups: string[] = []
+    let removedTemporaries: string[] = []
     if (options.apply) {
       await withArchiveWriteLock(options.archive, async () => {
+        // Under the write lock, so the only writers left to find are dead
+        // ones; a temporary whose process is gone will never be renamed.
+        removedTemporaries = await removeAbandonedArchiveTemporaries(
+          options.archive,
+        )
         if ((await readArchiveRevision(options.archive)) !== mergedFrom)
           throw new ConversationArchiveChangedError(options.archive)
         backup = await backupConversationArchive(
@@ -107,6 +114,7 @@ export const importConversationExport = async (options: {
       archive: options.archive,
       ...(backup === undefined ? {} : { backup }),
       ...(prunedBackups.length === 0 ? {} : { prunedBackups }),
+      ...(removedTemporaries.length === 0 ? {} : { removedTemporaries }),
       errors: [],
     }
   } finally {

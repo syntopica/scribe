@@ -18,15 +18,15 @@ void test('a successful apply keeps one backup and prunes the older ones', async
   await writeConversationExport([createArchiveRecord('b')], input)
 
   // Two stale generations from earlier runs, and three neighbours that carry
-  // a similar name and must survive: another archive's backup, an interrupted
-  // run's temporary file, and a copy someone named by hand.
+  // a similar name and must survive: another archive's backup, a live
+  // writer's temporary file, and a copy someone named by hand.
   const stale = [
     join(root, 'archive.jsonl.backup-2026-09-04T12-36-00-000Z'),
     join(root, 'archive.jsonl.backup-2026-09-04T13-20-00-000Z'),
   ]
   const neighbours = [
     join(root, 'other.jsonl.backup-2026-09-04T13-20-00-000Z'),
-    join(root, 'archive.jsonl.tmp-28652'),
+    join(root, `archive.jsonl.tmp-${String(process.ppid)}`),
     join(root, 'archive.jsonl.backup-recovered.jsonl'),
   ]
   for (const path of [...stale, ...neighbours]) await fs.writeFile(path, '')
