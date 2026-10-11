@@ -8,3 +8,7 @@ coverage/
 # owner's machines, clients and repositories. Kept on disk, never published.
 TODO.md
 TODO_LOG.md
+
+# The archive-contract fixture home is provider-shaped on purpose; a global
+# ignore of `.codex/` must not drop it.
+!fixtures/archive-contract/**/.codex/

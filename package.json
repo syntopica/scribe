@@ -22,6 +22,7 @@
     "conversations:import": "tsx scripts/bin/run-conversations-import.ts",
     "conversations:rewrite": "tsx scripts/bin/run-conversations-rewrite.ts",
     "conversations:render": "tsx scripts/bin/run-conversations-render.ts",
+    "contract:fixture": "tsx scripts/bin/run-archive-contract-fixture.ts",
     "conversations:test": "tsx --test \"scripts/**/*_TEST.ts\"",
     "scribe": "tsx scripts/bin/scribe.ts",
     "test": "pnpm run conversations:test",

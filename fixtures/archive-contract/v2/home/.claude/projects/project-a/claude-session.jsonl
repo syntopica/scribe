@@ -1,0 +1,4 @@
+{"type": "user", "sessionId": "claude-contract-1", "timestamp": "2026-08-19T08:00:00Z", "cwd": "/work/project-a", "message": {"role": "user", "content": "Why does the deploy fail?"}}
+{"type": "assistant", "sessionId": "claude-contract-1", "timestamp": "2026-08-19T08:00:05Z", "message": {"role": "assistant", "content": [{"type": "text", "text": "Reading the deploy script."}, {"type": "tool_use", "id": "toolu_1", "name": "Read", "input": {"file_path": "/work/project-a/deploy.sh"}}]}}
+{"type": "user", "sessionId": "claude-contract-1", "timestamp": "2026-08-19T08:00:06Z", "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "toolu_1", "content": "1\tset -e\n2\texit 3"}]}}
+{"type": "assistant", "sessionId": "claude-contract-1", "timestamp": "2026-08-19T08:00:10Z", "message": {"role": "assistant", "content": "Line 2 exits with status 3."}}
