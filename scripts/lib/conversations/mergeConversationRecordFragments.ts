@@ -1,5 +1,5 @@
 import { hashText } from './hashText'
-import { isLegacyToolOutputForm } from './isLegacyToolOutputForm'
+import { isArchivedUserRoleForm } from './isArchivedUserRoleForm'
 import { mergeConversationHosts } from './mergeConversationHosts'
 import type { ConversationRecord } from './types/ConversationRecord'
 import { upgradeConversationRecord } from './upgradeConversationRecord'
@@ -37,10 +37,10 @@ export const mergeConversationRecordFragments = (
   const events = new Map(left.events.map((event) => [event.id, event]))
   for (const event of right.events) {
     // An archived event keeps the role it was archived with, whichever side
-    // it arrives on, so a capture under the newer tool-output rule never
+    // it arrives on, so a capture under the newer role rules never
     // rewrites an event the archive already holds.
     const kept = events.get(event.id)
-    if (kept !== undefined && isLegacyToolOutputForm(kept, event)) continue
+    if (kept !== undefined && isArchivedUserRoleForm(kept, event)) continue
     events.set(event.id, event)
   }
   const hashes = [
