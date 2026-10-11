@@ -45,6 +45,7 @@ and `CLAUDE_SECONDARY_DESKTOP_DIR`, the state directory
 - [Conversation ownership](docs/architecture/conversation-ownership.md)
 - [ADR 0002: canonical conversation transport](docs/adr/0002-canonical-conversation-transport.md)
 - [Runbook: conversation transport](docs/runbooks/conversation-transport.md)
+- [Capability map (2026-08)](docs/research/conversation-capability-map.md)
 
 ## Check
 
