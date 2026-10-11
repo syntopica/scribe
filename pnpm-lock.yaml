@@ -174,8 +174,8 @@ importers:
         specifier: ^10.0.1
         version: 10.0.1(eslint@10.12.0(jiti@2.7.0)(supports-color@7.2.0))
       '@syntopica/prettier-config':
-        specifier: ^0.2.2
-        version: 0.2.2(prettier-plugin-organize-imports@4.3.0(@typescript/typescript6@6.0.2)(prettier@3.9.10))(prettier@3.9.10)
+        specifier: ^0.3.0
+        version: 0.3.0(prettier-plugin-organize-imports@4.3.0(@typescript/typescript6@6.0.2)(prettier@3.9.10))(prettier@3.9.10)
       '@syntopica/tsconfig':
         specifier: ^0.3.1
         version: 0.3.1
@@ -496,8 +496,8 @@ packages:
   '@sonarsource/analyzer-commons-configurations@2.31.0-5284':
     resolution: {integrity: sha512-ruk3blMs9BE9RNSp9LPpWZAIjxJmq4Cp00E3cELIHz7Kym3WxdWGRlKOMYLRQ5tJg/de7jN5AtEElY3bGIfTcw==}
 
-  '@syntopica/prettier-config@0.2.2':
-    resolution: {integrity: sha512-ksuAwSrd1FUXNxmr84OqpDSYRZFtJwWhTcQ7U2hwmIjVkYVCI1OlmUd+iDi3wqxFOiMT5/SWEo/H1K9EHgVpUw==}
+  '@syntopica/prettier-config@0.3.0':
+    resolution: {integrity: sha512-iWXfgAPMSjW37ncjoWUiIFcQ4ysMhkBIKZD1dRbvAMu+IrpWR2PZy1+KnLAbDTg360dM/W+IEmLw2O6S0nH6BA==}
     engines: {node: '>=20'}
     peerDependencies:
       prettier: '>=3.0.0'
@@ -1728,7 +1728,7 @@ snapshots:
 
   '@sonarsource/analyzer-commons-configurations@2.31.0-5284': {}
 
-  '@syntopica/prettier-config@0.2.2(prettier-plugin-organize-imports@4.3.0(@typescript/typescript6@6.0.2)(prettier@3.9.10))(prettier@3.9.10)':
+  '@syntopica/prettier-config@0.3.0(prettier-plugin-organize-imports@4.3.0(@typescript/typescript6@6.0.2)(prettier@3.9.10))(prettier@3.9.10)':
     dependencies:
       prettier: 3.9.10
       prettier-plugin-organize-imports: 4.3.0(@typescript/typescript6@6.0.2)(prettier@3.9.10)
