@@ -2,60 +2,52 @@
 
 ## Decision
 
-Conversation capabilities have one ecosystem owner each. Repositories may invoke
-an owner's public interface, but they must not reproduce its provider knowledge,
+Conversation capabilities have one owner each. Repositories may invoke an
+owner's public interface, but they must not reproduce its provider knowledge,
 normalization, integrity, merge, or indexing logic.
 
-| Capability                                                                          | Owner         | Other repositories may                                  |
-| ----------------------------------------------------------------------------------- | ------------- | ------------------------------------------------------- |
-| Provider discovery and read-only capture                                            | Rocket Agents | Invoke `conversations:doctor` or `conversations:export` |
-| Canonical schema, redaction, manifests, deduplication, backups, and archive updates | Rocket Agents | Exchange the resulting mode-0600 JSONL archive          |
-| Private hosts, authenticated SSH/rsync exchange, local paths, and schedules         | `dotfiles`    | Invoke Rocket Agents export/import on each trusted host |
-| Rendered-corpus indexing, entities, topics, lexical search, and semantic search     | Memstore      | Consume Markdown rendered by Rocket Agents              |
-| Deliberate human-authored knowledge                                                 | `brain`       | Link to indexed evidence                                |
+| Capability                                                                          | Owner      | Other repositories may                           |
+| ----------------------------------------------------------------------------------- | ---------- | ------------------------------------------------ |
+| Provider discovery and read-only capture                                            | Scribe     | Invoke `scribe doctor` or `scribe export`        |
+| Canonical schema, redaction, manifests, deduplication, backups, and archive updates | Scribe     | Exchange the resulting mode-0600 JSONL archive   |
+| Private hosts, authenticated SSH/rsync exchange, local paths, and schedules         | `dotfiles` | Invoke Scribe export/import on each trusted host |
+| Indexing, lexical and semantic retrieval, synthesis                                 | Atrium     | Consume the canonical archive (`atrium ingest`)  |
+| Deliberate human-authored knowledge                                                 | `brain`    | Link to indexed evidence                         |
 
-## Dependency direction
+Capture moved here from `syntopica/agents` at commit `832040c` on 2026-10-11.
+Memstore, the earlier indexing owner, is retired; Atrium reads the archive
+itself rather than a rendered corpus.
+
+## Data flow
 
 ```text
-provider state --read--> Rocket Agents canonical archive
+provider state --read--> Scribe canonical archive
                                |
-                               +-- dotfiles exchanges archive --> Rocket Agents import
+                               +-- dotfiles exchanges archive --> Scribe import
                                |
-                               +-- Rocket Agents render --> Memstore index --> search
+                               +-- Atrium ingest --> index --> search
 ```
 
-Dependencies do not point back toward provider state. Memstore never supplies
-transport records, and `dotfiles` never interprets provider files or canonical
-records.
+Dependencies do not point back toward provider state. Atrium never supplies
+records to Scribe.
 
 ## Prohibited duplication
 
-- `dotfiles` must not enumerate provider storage, parse JSON/JSONL/SQLite
-  conversations, merge native history, copy provider databases, implement
-  redaction, or copy Memstore storage.
-- Memstore integration code must not discover provider state, exchange archives
-  between machines, schedule transport, or define a second BusiRocket provider
-  catalog.
-- Rocket Agents must not contain private host aliases, personal schedules, SSH
-  credentials, or a semantic index implementation.
-- Compatibility aliases for a retired workflow are removed instead of maintained
-  indefinitely.
-
-Memstore continues to support its upstream standalone transcript import formats.
-In the BusiRocket integration those importers are compatibility inputs only: new
-provider coverage lands in Rocket Agents, and Memstore consumes the rendered
-Markdown corpus.
+- Other repositories must not read provider databases, transcripts or desktop
+  stores directly, re-implement event identity, timestamp normalization or
+  redaction, or merge archives themselves.
+- Atrium must not discover provider state, exchange archives between machines,
+  or schedule transport.
+- Scribe must not contain private host aliases, personal schedules, SSH
+  configuration, or anything that names its owner's machines.
 
 ## Verification
 
-Run the owner-specific gates:
-
 ```bash
-cd ~/p/agents && pnpm run conversations:test
-cd ~/p/dotfiles && ./scripts/check
-cd ~/p/memstore && uv run pytest tests/test_normalize.py tests/test_convo_miner_unit.py -q
+pnpm run check
 ```
 
-The `dotfiles` gate statically rejects native provider paths and retired merge
-entrypoints. Rocket Agents tests cover capture, normalization, security, import,
-and render behavior. Memstore tests cover generic transcript-to-index ingestion.
+Scribe's tests cover capture, normalization, security, import, render, and the
+v2 segment store. Atrium's tests encode the archive header
+(`rocket-agents-conversation-export`) and event-id derivation; that wire format
+does not change without a versioned fixture both repositories consume.

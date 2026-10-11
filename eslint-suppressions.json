@@ -1,0 +1,182 @@
+{
+  "scripts/lib/conversations/CONVERSATION_EXPORT_TEST.ts": {
+    "code-policy/no-inline-types-in-runtime-files": {
+      "count": 2
+    }
+  },
+  "scripts/lib/conversations/CONVERSATION_SEGMENT_FORMAT_TEST.ts": {
+    "code-policy/no-inline-types-in-runtime-files": {
+      "count": 3
+    }
+  },
+  "scripts/lib/conversations/ConversationArchiveState.ts": {
+    "code-policy/no-inline-types-in-runtime-files": {
+      "count": 4
+    }
+  },
+  "scripts/lib/conversations/benchmarkConversationSegments.ts": {
+    "code-policy/no-inline-types-in-runtime-files": {
+      "count": 1
+    }
+  },
+  "scripts/lib/conversations/captureConversationArtifactsIncrementally.ts": {
+    "code-policy/no-inline-types-in-runtime-files": {
+      "count": 2
+    }
+  },
+  "scripts/lib/conversations/collectConversationEventVariants.ts": {
+    "code-policy/no-inline-types-in-runtime-files": {
+      "count": 2
+    }
+  },
+  "scripts/lib/conversations/conversationArtifactCacheHit.ts": {
+    "code-policy/no-inline-types-in-runtime-files": {
+      "count": 1
+    }
+  },
+  "scripts/lib/conversations/conversationEventFromRecord.ts": {
+    "code-policy/no-inline-types-in-runtime-files": {
+      "count": 1
+    }
+  },
+  "scripts/lib/conversations/deriveConversationFragmentSetProvenance.ts": {
+    "code-policy/no-inline-types-in-runtime-files": {
+      "count": 1
+    }
+  },
+  "scripts/lib/conversations/evaluateConversationSegmentBenchmark.ts": {
+    "code-policy/no-inline-types-in-runtime-files": {
+      "count": 1
+    }
+  },
+  "scripts/lib/conversations/fixtures/createConversationCaptureInstallation.ts": {
+    "code-policy/no-inline-types-in-runtime-files": {
+      "count": 1
+    }
+  },
+  "scripts/lib/conversations/fixtures/createConversationFragment.ts": {
+    "code-policy/no-inline-types-in-runtime-files": {
+      "count": 1
+    }
+  },
+  "scripts/lib/conversations/fixtures/createConversationScratchDirectory.ts": {
+    "code-policy/no-inline-types-in-runtime-files": {
+      "count": 1
+    }
+  },
+  "scripts/lib/conversations/fixtures/exportConversationFixtureArchive.ts": {
+    "code-policy/no-inline-types-in-runtime-files": {
+      "count": 1
+    }
+  },
+  "scripts/lib/conversations/fixtures/planFragmentErasure.ts": {
+    "code-policy/no-inline-types-in-runtime-files": {
+      "count": 1
+    }
+  },
+  "scripts/lib/conversations/fixtures/seedConversationSegmentArchive.ts": {
+    "code-policy/no-inline-types-in-runtime-files": {
+      "count": 1
+    }
+  },
+  "scripts/lib/conversations/fixtures/writeClaudeConversationArtifact.ts": {
+    "code-policy/no-inline-types-in-runtime-files": {
+      "count": 1
+    }
+  },
+  "scripts/lib/conversations/fixtures/writeDamagedConversationArchive.ts": {
+    "code-policy/no-inline-types-in-runtime-files": {
+      "count": 1
+    }
+  },
+  "scripts/lib/conversations/importConversationExport.ts": {
+    "code-policy/no-inline-types-in-runtime-files": {
+      "count": 1
+    }
+  },
+  "scripts/lib/conversations/initializeConversationArchiveGeneration.ts": {
+    "code-policy/no-inline-types-in-runtime-files": {
+      "count": 1
+    }
+  },
+  "scripts/lib/conversations/migrateConversationArchiveToSegments.ts": {
+    "code-policy/no-inline-types-in-runtime-files": {
+      "count": 1
+    }
+  },
+  "scripts/lib/conversations/openConversationArchiveState.ts": {
+    "code-policy/no-inline-types-in-runtime-files": {
+      "count": 1
+    }
+  },
+  "scripts/lib/conversations/planConversationArchiveErasure.ts": {
+    "code-policy/no-inline-types-in-runtime-files": {
+      "count": 1
+    }
+  },
+  "scripts/lib/conversations/publishConversationCapture.ts": {
+    "code-policy/no-inline-types-in-runtime-files": {
+      "count": 3
+    }
+  },
+  "scripts/lib/conversations/publishConversationSegment.ts": {
+    "code-policy/no-inline-types-in-runtime-files": {
+      "count": 1
+    }
+  },
+  "scripts/lib/conversations/readArchiveRevision.ts": {
+    "code-policy/no-inline-types-in-runtime-files": {
+      "count": 1
+    }
+  },
+  "scripts/lib/conversations/readConversationArchiveGeneration.ts": {
+    "code-policy/no-inline-types-in-runtime-files": {
+      "count": 2
+    }
+  },
+  "scripts/lib/conversations/readConversationArchiveSegment.ts": {
+    "code-policy/no-inline-types-in-runtime-files": {
+      "count": 1
+    }
+  },
+  "scripts/lib/conversations/renderConversationArchive.ts": {
+    "code-policy/no-inline-types-in-runtime-files": {
+      "count": 1
+    }
+  },
+  "scripts/lib/conversations/rewriteConversationArchive.ts": {
+    "code-policy/no-inline-types-in-runtime-files": {
+      "count": 1
+    }
+  },
+  "scripts/lib/conversations/rewriteConversationRecord.ts": {
+    "code-policy/no-inline-types-in-runtime-files": {
+      "count": 1
+    }
+  },
+  "scripts/lib/conversations/runConversationCapturePass.ts": {
+    "code-policy/no-inline-types-in-runtime-files": {
+      "count": 2
+    }
+  },
+  "scripts/lib/conversations/serializeConversationSegment.ts": {
+    "code-policy/no-inline-types-in-runtime-files": {
+      "count": 2
+    }
+  },
+  "scripts/lib/conversations/streamJsonlConversationRecord.ts": {
+    "code-policy/no-inline-types-in-runtime-files": {
+      "count": 2
+    }
+  },
+  "scripts/lib/conversations/validators/validateConversationSegment.ts": {
+    "code-policy/no-inline-types-in-runtime-files": {
+      "count": 3
+    }
+  },
+  "scripts/lib/conversations/verifyConversationSegmentArchive.ts": {
+    "code-policy/no-inline-types-in-runtime-files": {
+      "count": 1
+    }
+  }
+}

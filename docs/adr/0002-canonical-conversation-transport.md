@@ -1,6 +1,8 @@
 # ADR 0002: Use a canonical, security-filtered conversation transport
 
-- Status: Accepted
+- Status: Accepted; owner changed 2026-10-11 (capture moved from Rocket Agents,
+  now `syntopica/agents`, to Scribe; Memstore retired in favour of Atrium, which
+  ingests the archive directly)
 - Date: 2026-08-19
 
 ## Context
@@ -19,7 +21,8 @@ imported.
 
 ## Decision
 
-Rocket Agents owns a versioned conversation transport with four commands:
+Rocket Agents (since 2026-10-11, Scribe) owns a versioned conversation transport
+with four commands:
 
 - `conversations:doctor` inventories supported local sources without reading
   credential stores.
@@ -50,9 +53,10 @@ streaming. Archive size is therefore bounded by available disk rather than
 JavaScript heap, and no apply destination is touched until the complete manifest
 and record stream have passed validation.
 
-Memstore remains the owner of semantic indexing, topics, and retrieval.
-`dotfiles` may schedule or invoke this transport and may hold private host
-names, but it does not implement the parser or the archive format.
+Memstore remained the owner of semantic indexing, topics, and retrieval until
+Atrium replaced it; Atrium ingests the canonical archive directly. `dotfiles`
+may schedule or invoke this transport and may hold private host names, but it
+does not implement the parser or the archive format.
 
 ## Security invariants
 

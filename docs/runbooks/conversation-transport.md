@@ -25,7 +25,7 @@ Choose an output path outside the repository. The parent directory is created
 with private permissions, and the completed file is mode `0600`.
 
 ```bash
-pnpm run conversations:export -- --source pi --output /tmp/rocket-agents-pi.jsonl
+pnpm run conversations:export -- --source pi --output /tmp/scribe-pi.jsonl
 ```
 
 The command fails without writing an export if any discovered artifact cannot be
@@ -45,40 +45,37 @@ staging is removed on both success and failure.
 Imports are dry-runs unless `--apply` is explicit:
 
 ```bash
-pnpm run conversations:import -- --input /tmp/rocket-agents-pi.jsonl --archive /tmp/rocket-agents-archive.jsonl
+pnpm run conversations:import -- --input /tmp/scribe-pi.jsonl --archive /tmp/scribe-archive.jsonl
 ```
 
 Apply only after reviewing `added`, `updated`, `duplicates`, and `errors`:
 
 ```bash
-pnpm run conversations:import -- --input /tmp/rocket-agents-pi.jsonl --archive /tmp/rocket-agents-archive.jsonl --apply
+pnpm run conversations:import -- --input /tmp/scribe-pi.jsonl --archive /tmp/scribe-archive.jsonl --apply
 ```
 
 If the archive exists, apply creates a timestamped mode-0600 backup beside it. A
 hash mismatch, invalid record, unsafe provenance path, or unsupported schema
 makes the import fail closed.
 
-## Render for Memstore
+## Render
 
 Rendering is a dry-run by default and writes one private Markdown file per
 conversation only with `--apply`:
 
 ```bash
-pnpm run conversations:render -- --input /tmp/rocket-agents-archive.jsonl --output-dir /tmp/rocket-agents-corpus
-pnpm run conversations:render -- --input /tmp/rocket-agents-archive.jsonl --output-dir /tmp/rocket-agents-corpus --apply
+pnpm run conversations:render -- --input /tmp/scribe-archive.jsonl --output-dir /tmp/scribe-corpus
+pnpm run conversations:render -- --input /tmp/scribe-archive.jsonl --output-dir /tmp/scribe-corpus --apply
 ```
 
-Verify the handoff without changing the Memstore index:
-
-```bash
-memstore mine /tmp/rocket-agents-corpus --mode convos --wing rocket-agents-conversation-verify --limit 1 --dry-run
-```
+Atrium does not need the rendered corpus: it ingests the canonical archive
+directly (`atrium ingest <archive>`).
 
 ## Exchange between machines
 
 Copy the canonical export with the existing authenticated SSH/rsync channel, run
 a dry import on the receiver, and then apply it. Do not copy provider databases,
-cookies, tokens, or Memstore storage. Host aliases and scheduling remain private
+cookies, tokens, or index files. Host aliases and scheduling remain private
 configuration in `dotfiles`. The complete ownership and prohibited-duplication
 rules are documented in
 [`../architecture/conversation-ownership.md`](../architecture/conversation-ownership.md).
