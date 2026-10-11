@@ -43,8 +43,12 @@ and `CLAUDE_SECONDARY_DESKTOP_DIR`, the state directory
 The wire format is pinned by a versioned fixture:
 `fixtures/archive-contract/v2/` holds a provider-shaped home and the export
 scribe writes from it, and a test fails when the two drift. Atrium vendors that
-export in its own tests. After an intended format change, run
-`pnpm contract:fixture` and copy the export into Atrium in the same change.
+export in its own tests. Beside it sit `pending-slice.jsonl`, the slice Atrium
+ingests with `--partial`, and `erasure-plan.json`, the applied erasure plan
+`atrium erase --plan` reads; their fields are listed in
+`docs/plans/2026-10-11-segment-archive-v2-stage-3.md`. After an intended format
+change, run `pnpm contract:fixture` and copy the changed files into Atrium in
+the same change.
 
 ## Documents
 

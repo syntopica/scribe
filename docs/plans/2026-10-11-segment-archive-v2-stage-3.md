@@ -1,7 +1,10 @@
 # Segment archive v2, stage 3: cross-repository plan
 
-Status: planned 2026-10-11. The first scribe slice of workstream 1 has landed
-(`636c946`); everything else below is open.
+Status: planned 2026-10-11. Landed in scribe: the erasure apply/verify slice
+(`636c946`), and the Atrium contract (erasure plan, inventory, pending slice)
+with its commands (see "Contracts with Atrium"). Everything not ticked below is
+open. Data location decided 2026-10-11 (owner, relayed by the coordinator); see
+workstream 4.
 
 Stage 3 completes what stage 2 left out: erasure, transport between
 installations, handing the pending slice to Atrium, and the writer freeze. It
@@ -32,6 +35,42 @@ Three repositories take part, and each owns its own side:
   destructive decision with an exact target inventory. Nothing in this plan does
   it.
 
+## Contracts with Atrium
+
+Pinned by `scripts/lib/conversations/ARCHIVE_CONTRACT_FIXTURE_TEST.ts` against
+committed files in `fixtures/archive-contract/v2/`, regenerated together with
+`pnpm contract:fixture`. Renaming a field below breaks Atrium.
+
+**Erasure plan** (`erasure-plan.json`, the plan as written after apply).
+Atrium's `atrium erase --plan <file>` reads `conversationIds`.
+
+| field              | type                                        | meaning                                                                                                                                                                |
+| ------------------ | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `kind`             | `"rocket-agents-conversation-erasure-plan"` | identifies the file                                                                                                                                                    |
+| `schemaVersion`    | `2`                                         |                                                                                                                                                                        |
+| `fromGenerationId` | string (64 hex)                             | the generation the plan was computed against; apply refuses any other                                                                                                  |
+| `toGenerationId`   | string (64 hex), optional                   | the generation applying the plan produced; absent until applied, because the id derives from the rewritten bytes                                                       |
+| `segmentSetSha256` | string (64 hex)                             | digest of the segment names the plan saw; apply refuses a moved archive                                                                                                |
+| `createdAt`        | ISO 8601 string                             |                                                                                                                                                                        |
+| `reason`           | `"erasure"`, `"redaction"` or `"pack"`      |                                                                                                                                                                        |
+| `conversationIds`  | string[], sorted                            | every conversation the plan removes any fragment of, including one that keeps other fragments: a synthesis built from an erased fragment carries its text either way   |
+| `conversations`    | object[]                                    | per conversation: `conversationId`, `removedFragmentSha256` (sorted), `removesConversation` (true when nothing of it remains); same order and ids as `conversationIds` |
+
+**Segment inventory**
+(`scribe segments-inventory --root <root> --state <state>`, JSON on stdout).
+Atrium reads `generationId` and `pendingDeliveries`: its index is stale when
+`generationId` differs from the generation it last ingested or when
+`pendingDeliveries` is not zero. The other keys are `baseSegments` (count),
+`segments` (sorted names), `segmentSetSha256` and `conversations` (count).
+
+**Pending slice** (`pending-slice.jsonl`). An ordinary export: the
+`rocket-agents-conversation-export` manifest line, then one materialized record
+per line. The fixture holds the Claude Code conversation of `export.jsonl`
+alone, a strict subset, for Atrium's `ingest --partial` test. Its records are
+materialized from the fragment set, so `provenance.contentSha256` is the
+fragment-set provenance and differs from the v1 export's value for the same
+conversation; ids, events and every other field are equal.
+
 ## Order
 
 1. Erasure and transport (scribe, then the dotfiles transport wrapper).
@@ -55,22 +94,23 @@ Each workstream starts only when the one before it passes its verification.
 - [x] `verifyConversationArchiveErasure`: the new generation is the old one
       minus exactly the planned fragments, as fragment sets; segments from
       another generation are reported, not counted. `636c946`.
-- [ ] Plan from disk in bounded memory. The test fixture
-      `planErasureAgainstArchive` collects every entry in memory, which is fine
-      for fixtures and wrong for a multi-gigabyte corpus. Stream the entries and
-      keep only the fragment hashes and conversation ids the plan needs.
+- [x] Plan from disk in bounded memory: `planConversationArchiveErasureFromRoot`
+      reads one segment at a time and keeps only conversation ids and fragment
+      hashes. The plan carries `conversationIds` and, once applied,
+      `toGenerationId` (`recordConversationErasureTarget`).
 - [ ] Redaction replacement. `reason: "redaction"` has to re-run the current
       redactor over the named conversations and publish the replacement
       fragments into the new base. Today apply only removes.
-- [ ] `scribe erase plan|apply|verify|activate`, with `--root` required and no
-      default, so the command cannot reach a live archive by omission. `plan`
-      writes a reviewable JSON file; `apply` takes that file; `activate` names
-      the generation id explicitly.
-- [ ] Segment inventory: `scribe segments inventory --root <root> --json` prints
-      the current generation id, the segment names and the four digests
-      `verifyConversationSegmentArchive` already computes, so two hosts compare
-      inventories without moving payload.
-- [ ] Segment receive: `scribe segments receive --root <root> --from <staging>`
+- [ ] `scribe erase plan|apply|verify|activate` (the library functions exist;
+      the command does not), with `--root` required and no default, so the
+      command cannot reach a live archive by omission. `plan` writes a
+      reviewable JSON file; `apply` takes that file; `activate` names the
+      generation id explicitly.
+- [x] Segment inventory:
+      `scribe segments-inventory --root <root> --state <state>` prints the keys
+      under "Contracts with Atrium". It replays no payload it has already
+      indexed; the four full digests stay in `verify-segments`.
+- [ ] Segment receive: `scribe segments-receive --root <root> --from <staging>`
       validates each staged segment through the generation barrier before
       linking it in. A segment whose header names another generation, or a base
       segment the manifest does not name, is refused and left in staging.
@@ -85,7 +125,7 @@ Each workstream starts only when the one before it passes its verification.
 
 - [ ] `sync-conversations <route> inventory|dry|sync|seed-generation` over
       segments: rsync only the names missing on the other side into a staging
-      directory, then call `scribe segments receive`. The v1 path stays the
+      directory, then call `scribe segments-receive`. The v1 path stays the
       default until cutover.
 - [ ] Both routes to the same laptop must report one installation; tests cover
       both aliases.
@@ -117,16 +157,22 @@ every other line as a conversation (`atrium/ingest/read_archive.py`).
 
 ### Scribe
 
-- [ ] `scribe segments export-pending --root <root> --state <state> --output     <file>`:
-      materialize the conversations in `pending_deliveries` and write them as an
-      ordinary export (header plus records), atomically.
-- [ ] `scribe segments ack-pending --state <state> --slice <file>`: clear
-      exactly the ids that slice carried, so a failed ingest redelivers them and
-      nothing else.
-- [ ] `scribe segments export-materialized --root <root> --output <file>`: the
-      full export for rebuilds and for every refresh after a generation change.
-- [ ] A contract fixture for the slice, under `fixtures/archive-contract/v2/`,
-      that Atrium vendors the same way it vendors the full export.
+- [x] `scribe export-pending --root <root> --state <state> --output <file>`:
+      writes the conversations in `pending_deliveries`, materialized, as an
+      ordinary export, streamed and renamed into place.
+- [x] `scribe ack-pending --root <root> --state <state> --slice <file>`: clears
+      a pending id only when the slice carries exactly the record the archive
+      materializes now; one captured or synced again after the slice was written
+      stays pending and is reported as `stale`.
+- [x] `scribe export-materialized --root <root> --state <state> --output <file>`:
+      the full export, streamed from the state in id order.
+- [x] Segments replayed into the state from elsewhere (a sync, a seed, a lost
+      state) are marked pending, so Atrium receives what a peer contributed.
+- [x] The slice contract fixture:
+      `fixtures/archive-contract/v2/pending-slice.jsonl`.
+- All four commands require `--root` and `--state` with no default: opening a
+  state for another generation discards it, so a default could reach the live
+  state by omission.
 
 ### Atrium
 
@@ -195,13 +241,13 @@ running again.
 
 ### Data location
 
-Proposed, for the owner to confirm before seeding:
+Decided 2026-10-11 (owner, relayed by the coordinator). These paths are final:
 
 | what                     | where                                                       |
 | ------------------------ | ----------------------------------------------------------- |
 | v1 archive (unchanged)   | `$SYNTOPICA_DATA/conversations/archive.jsonl`               |
 | segment root             | `$SYNTOPICA_DATA/conversations/segments/`                   |
-| disposable state         | `$HOME/.local/state/rocket-agents/conversations/`           |
+| disposable state, locks  | `$HOME/.local/state/rocket-agents/conversations/`           |
 | freeze sentinel, reports | `$HOME/.local/state/rocket-agents/conversations/migration*` |
 
 The original design put the segment root under
@@ -227,7 +273,7 @@ Until a separate purge decision, rollback is cheap and has two levels:
 
 ### Drill, on a disposable copy
 
-- [ ] `scribe segments recovery-drill --root <copy> --work <dir>     --exercise-erasure --exercise-stale-peer`:
+- [ ] `scribe recovery-drill --root <copy> --work <dir>     --exercise-erasure --exercise-stale-peer`:
       delete the disposable state and rebuild it from segments; inject a
       synthetic target, erase it, verify; return a peer on the old generation
       and show it refused, then reseeded; activate the old generation and show
@@ -249,7 +295,7 @@ of these hold:
 - recoverability: the drill passes on a copy of that migration, including
   rollback to the previous generation and to v1;
 - every holder is reachable and passes the free-space rule;
-- the owner has confirmed the data location above.
+- the data location above (decided 2026-10-11) is what every holder uses.
 
 ```bash
 cd "$HOME/p/scribe" && pnpm run check
@@ -257,6 +303,7 @@ cd "$HOME/p/atrium" && uv run pytest tests/ -q
 cd "$HOME/p/dotfiles" && ./scripts/check
 ```
 
-The commands the drill and gate name (`scribe erase`, `scribe segments …`,
-`conversation-writers`, the segment modes of `sync-conversations`) do not exist
-yet; they are the acceptance interfaces of the steps above.
+The commands the drill and gate name (`scribe erase`, `segments-receive`,
+`recovery-drill`, `conversation-writers`, the segment modes of
+`sync-conversations`) do not exist yet; they are the acceptance interfaces of
+the steps above.
