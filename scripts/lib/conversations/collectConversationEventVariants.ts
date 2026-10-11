@@ -1,3 +1,4 @@
+import { isLegacyToolOutputForm } from './isLegacyToolOutputForm'
 import type { ConversationEvent } from './types/ConversationEvent'
 import type { ConversationEventVariant } from './types/ConversationEventVariant'
 
@@ -30,8 +31,13 @@ export const collectConversationEventVariants = (
     const ordered = [...forms.entries()].toSorted(([left], [right]) =>
       left.localeCompare(right),
     )
-    const chosen = ordered.at(0)
-    if (chosen === undefined) continue
+    const lowest = ordered.at(0)
+    if (lowest === undefined) continue
+    // `tool` sorts before `user`, so the lowest bytes alone would rewrite an
+    // archived tool-output event's role; the archived form wins instead.
+    const chosen =
+      ordered.find(([, event]) => isLegacyToolOutputForm(event, lowest[1])) ??
+      lowest
     if (ordered.length > 1) {
       conflicts.push({ id, variants: ordered.map(([, event]) => event) })
     }

@@ -1,4 +1,5 @@
 import { CONVERSATION_ROLES } from './constants/CONVERSATION_ROLES'
+import { isToolResultOnlyContent } from './isToolResultOnlyContent'
 import { objectAt } from './objectAt'
 import { stringAt } from './stringAt'
 import type { ConversationRole } from './types/ConversationRole'
@@ -13,6 +14,8 @@ export const conversationRoleFromRecord = (
   }
   const payload = objectAt(record, 'payload')
   const message = objectAt(record, 'message')
+  // Before the declared role: Claude Code declares `user` for tool output.
+  if (isToolResultOnlyContent(message?.['content'])) return 'tool'
   const candidate =
     stringAt(record, 'role') ??
     stringAt(message, 'role') ??
