@@ -13,6 +13,7 @@ import { hashConversationFragment } from './hashConversationFragment'
 import { publishConversationSegment } from './publishConversationSegment'
 import { readConversationArchiveGeneration } from './readConversationArchiveGeneration'
 import { readConversationArchiveGenerationManifest } from './readConversationArchiveGenerationManifest'
+import { readConversationGenerationLineage } from './readConversationGenerationLineage'
 import { verifyConversationArchiveErasure } from './verifyConversationArchiveErasure'
 import { verifyConversationSegmentArchive } from './verifyConversationSegmentArchive'
 
@@ -202,4 +203,51 @@ void test('a generation the archive does not hold cannot be selected', async (co
   )
   const current = await readConversationArchiveGeneration(root)
   assert.equal(current.generation.generationId, generation.generationId)
+})
+
+void test('each erasure records its parent, and the lineage walks them newest first', async (context) => {
+  const { root, generation } = await seedErasureArchiveWithCapture(context)
+  const first = await applyConversationArchiveErasure({
+    root,
+    plan: await planErasureAgainstArchive({
+      root,
+      removeFragmentSha256: [
+        hashConversationFragment(ERASURE_FIXTURE_FRAGMENTS.leaked),
+      ],
+    }),
+    createdAt: '2026-10-11T12:01:00.000Z',
+  })
+  await activateConversationArchiveGeneration({
+    root,
+    generationId: first.generationId,
+    updatedAt: '2026-10-11T12:02:00.000Z',
+  })
+  const second = await applyConversationArchiveErasure({
+    root,
+    plan: await planErasureAgainstArchive({
+      root,
+      removeConversationIds: ['b'],
+    }),
+    createdAt: '2026-10-11T12:03:00.000Z',
+  })
+  const newest = await readConversationArchiveGenerationManifest(
+    root,
+    second.generationId,
+  )
+  assert.equal(newest.generation.parentGenerationId, first.generationId)
+  assert.deepEqual(
+    await readConversationGenerationLineage(root, newest.generation),
+    [first.generationId, generation.generationId],
+  )
+
+  // A purged ancestor ends the lineage rather than inventing one.
+  const purged = await readConversationArchiveGenerationManifest(
+    root,
+    first.generationId,
+  )
+  await fs.rm(purged.paths.generation ?? '', { recursive: true, force: true })
+  assert.deepEqual(
+    await readConversationGenerationLineage(root, newest.generation),
+    [],
+  )
 })

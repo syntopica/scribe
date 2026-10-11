@@ -71,6 +71,30 @@ materialized from the fragment set, so `provenance.contentSha256` is the
 fragment-set provenance and differs from the v1 export's value for the same
 conversation; ids, events and every other field are equal.
 
+**Generation stamp on materialized exports.** The manifest line of every
+`export-materialized` and `export-pending` file carries two more fields after
+`contentSha256`:
+
+| field               | type                   | meaning                                                                 |
+| ------------------- | ---------------------- | ----------------------------------------------------------------------- |
+| `generationId`      | string (64 hex)        | the generation the export was materialized from                         |
+| `generationLineage` | string[], newest first | that generation's ancestors: its parent, the parent's parent, and so on |
+
+Generation ids are content hashes and cannot be ordered, so Atrium accepts an
+erase only when the plan's `toGenerationId` is the export's `generationId` or
+appears in its `generationLineage`. The lineage comes from `parentGenerationId`
+in each `generation.json`, which an erasure records as the generation it was
+applied to (since 2026-10-11; it is not part of the generation id). The walk
+ends at a generation that records no parent - one migrated from v1, initialized
+empty, or sealed before parents were recorded - or whose manifest this
+installation no longer holds, for example after a purge. A lineage can therefore
+be shorter than the true history, never wrong; an empty array means no ancestor
+is known. v1 exports (`scribe export`) carry neither field.
+`materialized-after-erasure.jsonl` is the full export after the contract erasure
+is cut over: its `generationId` is `erasure-plan.json`'s `toGenerationId` and
+its lineage is `[fromGenerationId]`. The pending slice fixture comes from a
+store initialized empty, so its lineage is `[]`.
+
 ## Order
 
 1. Erasure and transport (scribe, then the dotfiles transport wrapper).

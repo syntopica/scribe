@@ -35,6 +35,7 @@ export const writeConversationExportFromRecords = async (
     createdAt: options.now.toISOString(),
     records,
     contentSha256: hash.digest('hex'),
+    ...options.generation,
   }
 
   const temporary = `${options.output}.tmp-${String(process.pid)}`

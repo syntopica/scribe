@@ -1,11 +1,6 @@
 import { promises as fs } from 'node:fs'
-import { applyConversationArchiveErasure } from './applyConversationArchiveErasure'
-import { captureArchiveContractHome } from './captureArchiveContractHome'
-import { ARCHIVE_CONTRACT_FIXTURE_CLOCK } from './constants/ARCHIVE_CONTRACT_FIXTURE_CLOCK'
+import { applyArchiveContractErasure } from './applyArchiveContractErasure'
 import { createArchiveContractSegmentStore } from './createArchiveContractSegmentStore'
-import { planConversationArchiveErasureFromRoot } from './planConversationArchiveErasureFromRoot'
-import { readStoredConversationIdsBySource } from './readStoredConversationIdsBySource'
-import { recordConversationErasureTarget } from './recordConversationErasureTarget'
 
 /**
  * Write an applied erasure plan, from the contract home, as Atrium reads it.
@@ -18,22 +13,7 @@ import { recordConversationErasureTarget } from './recordConversationErasureTarg
 export const writeErasurePlanContractFixture = async (output: string) => {
   const store = await createArchiveContractSegmentStore()
   try {
-    await captureArchiveContractHome(store, new Set(['claude-code', 'codex']))
-    const plan = await planConversationArchiveErasureFromRoot({
-      root: store.root,
-      createdAt: ARCHIVE_CONTRACT_FIXTURE_CLOCK,
-      reason: 'erasure',
-      removeConversationIds: await readStoredConversationIdsBySource(
-        store,
-        'claude-code',
-      ),
-    })
-    const applied = await applyConversationArchiveErasure({
-      root: store.root,
-      plan,
-      createdAt: ARCHIVE_CONTRACT_FIXTURE_CLOCK,
-    })
-    const recorded = recordConversationErasureTarget(plan, applied.generationId)
+    const recorded = await applyArchiveContractErasure(store)
     await fs.writeFile(output, `${JSON.stringify(recorded, null, 2)}\n`)
     return recorded
   } finally {

@@ -5,6 +5,7 @@ import { deriveConversationArchiveGenerationId } from './deriveConversationArchi
 import { fsyncConversationDirectory } from './fsyncConversationDirectory'
 import { publishConversationSegment } from './publishConversationSegment'
 import { resolveConversationSegmentPaths } from './resolveConversationSegmentPaths'
+import { streamConversationSegmentTexts } from './streamConversationSegmentTexts'
 import type { ConversationArchiveGeneration } from './types/ConversationArchiveGeneration'
 import type { SealConversationArchiveGenerationOptions } from './types/SealConversationArchiveGenerationOptions'
 
@@ -41,7 +42,9 @@ export const sealConversationArchiveGeneration = async (
 
   try {
     const hashes: string[] = []
-    for await (const text of options.baseSegments) {
+    for await (const text of streamConversationSegmentTexts(
+      options.baseSegments,
+    )) {
       const result = await publishConversationSegment({
         segmentsDirectory: stagedSegments,
         text,
@@ -62,6 +65,9 @@ export const sealConversationArchiveGeneration = async (
       baseSegmentSha256: hashes.toSorted((left, right) =>
         left.localeCompare(right),
       ),
+      ...(options.parentGenerationId === undefined
+        ? {}
+        : { parentGenerationId: options.parentGenerationId }),
     }
     await fs.writeFile(
       join(staging, 'generation.json'),

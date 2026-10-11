@@ -58,6 +58,7 @@ export const applyConversationArchiveErasure = async (
     }),
     createdAt: options.createdAt,
     buckets: options.buckets ?? 32,
+    parentGenerationId: generation.generationId,
   })
   const unmatched = [...planned].filter((sha256) => !removed.has(sha256))
   return {

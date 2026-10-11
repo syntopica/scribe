@@ -12,4 +12,12 @@ export interface ConversationArchiveGeneration {
   generationId: string
   createdAt: string
   baseSegmentSha256: string[]
+  /**
+   * The generation this one was rewritten from, when it was: an erasure records
+   * the generation it was applied to. Absent for a generation migrated from v1
+   * or initialized empty, and for any generation sealed before parents were
+   * recorded (2026-10-11); a lineage walk ends there. Not part of the id, which
+   * derives from the base segments alone.
+   */
+  parentGenerationId?: string
 }

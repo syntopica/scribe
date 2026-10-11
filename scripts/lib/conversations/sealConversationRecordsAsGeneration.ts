@@ -55,6 +55,9 @@ export const sealConversationRecordsAsGeneration = async (
     return await sealConversationArchiveGeneration({
       root: options.root,
       createdAt: options.createdAt,
+      ...(options.parentGenerationId === undefined
+        ? {}
+        : { parentGenerationId: options.parentGenerationId }),
       baseSegments: (async function* () {
         for (const path of paths) {
           const fragments: ConversationRecord[] = []

@@ -1,4 +1,5 @@
 import { openConversationSegmentState } from './openConversationSegmentState'
+import { readConversationGenerationLineage } from './readConversationGenerationLineage'
 import type { ConversationRecord } from './types/ConversationRecord'
 import type { ExportConversationSegmentsOptions } from './types/ExportConversationSegmentsOptions'
 import { writeConversationExportFromRecords } from './writeConversationExportFromRecords'
@@ -29,6 +30,13 @@ export const exportPendingConversationSlice = async (
       records,
       output: options.output,
       now: options.now,
+      generation: {
+        generationId: generation.generationId,
+        generationLineage: await readConversationGenerationLineage(
+          options.root,
+          generation,
+        ),
+      },
     })
     return {
       generationId: generation.generationId,

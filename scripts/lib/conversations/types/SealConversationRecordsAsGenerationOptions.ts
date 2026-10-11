@@ -6,4 +6,5 @@ export interface SealConversationRecordsAsGenerationOptions {
   records: AsyncIterable<ConversationRecord>
   createdAt: string
   buckets: number
+  parentGenerationId?: string
 }

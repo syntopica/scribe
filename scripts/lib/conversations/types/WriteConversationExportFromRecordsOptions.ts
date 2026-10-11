@@ -1,3 +1,4 @@
+import type { ConversationExportGenerationStamp } from './ConversationExportGenerationStamp'
 import type { ConversationRecord } from './ConversationRecord'
 
 /**
@@ -10,4 +11,6 @@ export interface WriteConversationExportFromRecordsOptions {
   records: () => Iterable<ConversationRecord>
   output: string
   now: Date
+  /** Stamped on the manifest line when the export comes from a segment archive. */
+  generation?: ConversationExportGenerationStamp
 }
