@@ -40,11 +40,11 @@ and `CLAUDE_SECONDARY_DESKTOP_DIR`, the state directory
 `~/.local/state/rocket-agents/conversations`, and the archive write lock
 `<archive>.write-lock`.
 
-The wire format is pinned by a versioned fixture: `fixtures/archive-contract/v2/`
-holds a provider-shaped home and the export scribe writes from it, and a test
-fails when the two drift. Atrium vendors that export in its own tests. After an
-intended format change, run `pnpm contract:fixture` and copy the export into
-Atrium in the same change.
+The wire format is pinned by a versioned fixture:
+`fixtures/archive-contract/v2/` holds a provider-shaped home and the export
+scribe writes from it, and a test fails when the two drift. Atrium vendors that
+export in its own tests. After an intended format change, run
+`pnpm contract:fixture` and copy the export into Atrium in the same change.
 
 ## Documents
 
