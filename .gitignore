@@ -3,3 +3,8 @@ node_modules/
 dist/
 coverage/
 *.tsbuildinfo
+
+# The backlog and its log are this instance's, not the engine's: they name the
+# owner's machines, clients and repositories. Kept on disk, never published.
+TODO.md
+TODO_LOG.md
