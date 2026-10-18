@@ -1,4 +1,5 @@
 import { resolve } from 'node:path'
+import { assertConversationWritersNotFrozen } from '../lib/conversations/assertConversationWritersNotFrozen'
 import { rewriteConversationArchive } from '../lib/conversations/rewriteConversationArchive'
 import { flagValue } from '../lib/machine/cli/flagValue'
 import { flagValues } from '../lib/machine/cli/flagValues'
@@ -23,10 +24,12 @@ export const main = async () => {
     process.exitCode = 2
     return
   }
+  const apply = process.argv.includes('--apply')
+  if (apply) await assertConversationWritersNotFrozen()
   const result = await rewriteConversationArchive({
     archive: resolve(requestedArchive),
     homes,
-    apply: process.argv.includes('--apply'),
+    apply,
   })
   console.log(JSON.stringify(result, null, 2))
   process.exitCode = result.ok ? 0 : 1

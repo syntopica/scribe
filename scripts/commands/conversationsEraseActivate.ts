@@ -1,5 +1,6 @@
 import { join, resolve } from 'node:path'
 import { activateConversationArchiveGeneration } from '../lib/conversations/activateConversationArchiveGeneration'
+import { assertConversationWritersNotFrozen } from '../lib/conversations/assertConversationWritersNotFrozen'
 import { isConversationDigest } from '../lib/conversations/isConversationDigest'
 import { withArchiveWriteLock } from '../lib/conversations/withArchiveWriteLock'
 import { flagValue } from '../lib/machine/cli/flagValue'
@@ -22,6 +23,8 @@ export const conversationsEraseActivate = async (argv: string[]) => {
     process.exitCode = 2
     return
   }
+  const migrationFrozen = argv.includes('--migration-frozen')
+  await assertConversationWritersNotFrozen(migrationFrozen)
   const root = resolve(requestedRoot)
   // The lock capture, erase apply, receive and seed take: the selected
   // generation cannot move while any of them is writing into it.
@@ -35,6 +38,7 @@ export const conversationsEraseActivate = async (argv: string[]) => {
           flagValue(argv, '--now') ?? Date.now(),
         ).toISOString(),
       }),
+    migrationFrozen,
   )
   console.log(JSON.stringify(reference, null, 2))
 }

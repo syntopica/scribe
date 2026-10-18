@@ -1,4 +1,5 @@
 import { resolve } from 'node:path'
+import { assertConversationWritersNotFrozen } from '../lib/conversations/assertConversationWritersNotFrozen'
 import { conversationPathExists } from '../lib/conversations/conversationPathExists'
 import { isConversationDigest } from '../lib/conversations/isConversationDigest'
 import { receiveConversationSegments } from '../lib/conversations/receiveConversationSegments'
@@ -37,6 +38,8 @@ export const main = async () => {
     process.exitCode = 2
     return
   }
+  const migrationFrozen = process.argv.includes('--migration-frozen')
+  await assertConversationWritersNotFrozen(migrationFrozen)
   const root = resolve(requestedRoot)
   if (
     !(await conversationPathExists(
@@ -53,6 +56,7 @@ export const main = async () => {
     root,
     from: resolve(from),
     expectedGenerationId: expected,
+    migrationFrozen,
   })
   console.log(JSON.stringify(report, null, 2))
   if (report.refusedExchange !== undefined) {

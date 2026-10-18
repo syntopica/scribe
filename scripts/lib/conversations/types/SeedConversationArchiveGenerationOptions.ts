@@ -3,4 +3,6 @@ export interface SeedConversationArchiveGenerationOptions {
   root: string
   from: string
   generationId: string
+  /** `--migration-frozen`: a cutover step that runs inside the writer freeze. */
+  migrationFrozen?: boolean
 }

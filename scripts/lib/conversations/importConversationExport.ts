@@ -17,6 +17,7 @@ export const importConversationExport = async (options: {
   archive: string
   apply: boolean
   now?: Date
+  migrationFrozen?: boolean
 }): Promise<ConversationImportResult> => {
   const directory = await mkdtemp(
     join(tmpdir(), 'rocket-agents-conversation-import-'),
@@ -69,40 +70,44 @@ export const importConversationExport = async (options: {
     let prunedBackups: string[] = []
     let removedTemporaries: string[] = []
     if (options.apply) {
-      await withArchiveWriteLock(options.archive, async () => {
-        // Under the write lock, so the only writers left to find are dead
-        // ones; a temporary whose process is gone will never be renamed.
-        removedTemporaries = await removeAbandonedArchiveTemporaries(
-          options.archive,
-        )
-        if ((await readArchiveRevision(options.archive)) !== mergedFrom)
-          throw new ConversationArchiveChangedError(options.archive)
-        backup = await backupConversationArchive(
-          options.archive,
-          options.now ?? new Date(),
-        )
-        await writeConversationExportFromStore(
-          store,
-          options.archive,
-          options.now,
-          [],
-          // Writing the replacement takes as long as the merge did, so the
-          // check above has aged by a whole publication before the rename.
-          // Take it again against the archive as it is now.
-          async () => {
-            if ((await readArchiveRevision(options.archive)) !== mergedFrom)
-              throw new ConversationArchiveChangedError(options.archive)
-          },
-        )
-        // The archive is replaced, so the copy taken above is the previous
-        // generation and every older backup is surplus. Pruned only after the
-        // rename: a failed write leaves all of them in place.
-        if (backup !== undefined)
-          prunedBackups = await pruneConversationArchiveBackups(
+      await withArchiveWriteLock(
+        options.archive,
+        async () => {
+          // Under the write lock, so the only writers left to find are dead
+          // ones; a temporary whose process is gone will never be renamed.
+          removedTemporaries = await removeAbandonedArchiveTemporaries(
             options.archive,
-            backup,
           )
-      })
+          if ((await readArchiveRevision(options.archive)) !== mergedFrom)
+            throw new ConversationArchiveChangedError(options.archive)
+          backup = await backupConversationArchive(
+            options.archive,
+            options.now ?? new Date(),
+          )
+          await writeConversationExportFromStore(
+            store,
+            options.archive,
+            options.now,
+            [],
+            // Writing the replacement takes as long as the merge did, so the
+            // check above has aged by a whole publication before the rename.
+            // Take it again against the archive as it is now.
+            async () => {
+              if ((await readArchiveRevision(options.archive)) !== mergedFrom)
+                throw new ConversationArchiveChangedError(options.archive)
+            },
+          )
+          // The archive is replaced, so the copy taken above is the previous
+          // generation and every older backup is surplus. Pruned only after the
+          // rename: a failed write leaves all of them in place.
+          if (backup !== undefined)
+            prunedBackups = await pruneConversationArchiveBackups(
+              options.archive,
+              backup,
+            )
+        },
+        options.migrationFrozen,
+      )
     }
     return {
       ok: true,

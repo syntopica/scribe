@@ -1,4 +1,5 @@
 import { resolve } from 'node:path'
+import { assertConversationWritersNotFrozen } from '../lib/conversations/assertConversationWritersNotFrozen'
 import { isConversationDigest } from '../lib/conversations/isConversationDigest'
 import { seedConversationArchiveGeneration } from '../lib/conversations/seedConversationArchiveGeneration'
 import { flagValue } from '../lib/machine/cli/flagValue'
@@ -32,10 +33,13 @@ export const main = async () => {
     process.exitCode = 2
     return
   }
+  const migrationFrozen = process.argv.includes('--migration-frozen')
+  await assertConversationWritersNotFrozen(migrationFrozen)
   const result = await seedConversationArchiveGeneration({
     root: resolve(requestedRoot),
     from: resolve(from),
     generationId,
+    migrationFrozen,
   })
   console.log(JSON.stringify(result, null, 2))
 }

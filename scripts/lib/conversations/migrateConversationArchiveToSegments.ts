@@ -1,16 +1,18 @@
 import { randomUUID } from 'node:crypto'
 import { createWriteStream, promises as fs } from 'node:fs'
 import { join } from 'node:path'
+import { activateConversationArchiveGeneration } from './activateConversationArchiveGeneration'
 import { CONVERSATION_BASE_GENERATION_ID } from './constants/CONVERSATION_BASE_GENERATION_ID'
 import { conversationFragmentBucketIndex } from './conversationFragmentBucketIndex'
 import { forEachLfLine } from './forEachLfLine'
 import { hashConversationFragment } from './hashConversationFragment'
-import { initializeConversationArchiveGeneration } from './initializeConversationArchiveGeneration'
 import { migratableConversationRecord } from './migratableConversationRecord'
+import { sealConversationArchiveGeneration } from './sealConversationArchiveGeneration'
 import { serializeConversationSegment } from './serializeConversationSegment'
 import { streamConversationExport } from './streamConversationExport'
 import type { ConversationRecord } from './types/ConversationRecord'
 import { upgradeConversationRecord } from './upgradeConversationRecord'
+import { withArchiveWriteLock } from './withArchiveWriteLock'
 
 /**
  * Turn one v1 archive file into the base segments of a new generation.
@@ -37,6 +39,8 @@ export const migrateConversationArchiveToSegments = async (options: {
   root: string
   createdAt: string
   buckets?: number
+  /** `--migration-frozen`: run inside the writer freeze, as the cutover does. */
+  migrationFrozen?: boolean
 }) => {
   const buckets = options.buckets ?? 32
   const scratch = join(options.root, `.migration-${randomUUID()}`)
@@ -79,7 +83,7 @@ export const migrateConversationArchiveToSegments = async (options: {
       })
     }
 
-    const sealed = await initializeConversationArchiveGeneration({
+    const sealed = await sealConversationArchiveGeneration({
       root: options.root,
       createdAt: options.createdAt,
       baseSegments: (async function* () {
@@ -98,6 +102,18 @@ export const migrateConversationArchiveToSegments = async (options: {
         }
       })(),
     })
+    // Sealing selects nothing; selecting is the step that changes what every
+    // reader sees, so it takes the write lock and meets the freeze there.
+    await withArchiveWriteLock(
+      join(options.root, 'archive'),
+      async () =>
+        activateConversationArchiveGeneration({
+          root: options.root,
+          generationId: sealed.generationId,
+          updatedAt: options.createdAt,
+        }),
+      options.migrationFrozen,
+    )
 
     return {
       generationId: sealed.generationId,

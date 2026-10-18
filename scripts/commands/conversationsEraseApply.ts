@@ -1,5 +1,6 @@
 import { join, resolve } from 'node:path'
 import { applyConversationArchiveErasure } from '../lib/conversations/applyConversationArchiveErasure'
+import { assertConversationWritersNotFrozen } from '../lib/conversations/assertConversationWritersNotFrozen'
 import { readConversationErasurePlanFile } from '../lib/conversations/readConversationErasurePlanFile'
 import { recordConversationErasureTarget } from '../lib/conversations/recordConversationErasureTarget'
 import { replaceConversationJsonFile } from '../lib/conversations/replaceConversationJsonFile'
@@ -22,6 +23,8 @@ export const conversationsEraseApply = async (argv: string[]) => {
     process.exitCode = 2
     return
   }
+  const migrationFrozen = argv.includes('--migration-frozen')
+  await assertConversationWritersNotFrozen(migrationFrozen)
   const root = resolve(requestedRoot)
   // The lock capture takes: it freezes captures for the rewrite, and a second
   // apply of the same plan waits here, then finds the target recorded.
@@ -49,6 +52,7 @@ export const conversationsEraseApply = async (argv: string[]) => {
       )
       return sealed
     },
+    migrationFrozen,
   )
   if (applied === undefined) return
   console.log(JSON.stringify({ plan: resolve(planFile), ...applied }, null, 2))

@@ -1,6 +1,7 @@
 import { promises as fs } from 'node:fs'
 import { dirname } from 'node:path'
 import { setTimeout as delay } from 'node:timers/promises'
+import { assertConversationWritersNotFrozen } from './assertConversationWritersNotFrozen'
 import { isArchiveLockAbandoned } from './isArchiveLockAbandoned'
 
 /**
@@ -25,10 +26,15 @@ import { isArchiveLockAbandoned } from './isArchiveLockAbandoned'
  * section, and the second one taken immediately before the rename, refuse a
  * lost update even if the lock were bypassed entirely. This exists to make
  * that refusal rare rather than to make it unnecessary.
+ *
+ * The migration freeze is checked again once the lock is held: a freeze that
+ * lands while this writer waited must win. `migrationFrozen` lets a step the
+ * cutover runs inside the freeze through.
  */
 export const withArchiveWriteLock = async <T>(
   archive: string,
   publish: () => Promise<T>,
+  migrationFrozen = false,
 ): Promise<T> => {
   const retryMs = 250
   // Long enough for a queued writer to sit through a full publication of an
@@ -65,6 +71,7 @@ export const withArchiveWriteLock = async <T>(
     }
   }
   try {
+    await assertConversationWritersNotFrozen(migrationFrozen)
     return await publish()
   } finally {
     await fs.rm(lock, { force: true })

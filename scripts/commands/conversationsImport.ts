@@ -1,4 +1,5 @@
 import { resolve } from 'node:path'
+import { assertConversationWritersNotFrozen } from '../lib/conversations/assertConversationWritersNotFrozen'
 import { importConversationExport } from '../lib/conversations/importConversationExport'
 import { flagValue } from '../lib/machine/cli/flagValue'
 
@@ -11,10 +12,15 @@ export const main = async () => {
     return
   }
 
+  const apply = process.argv.includes('--apply')
+  const migrationFrozen = process.argv.includes('--migration-frozen')
+  // A dry run writes nothing, so it stays available inside the freeze.
+  if (apply) await assertConversationWritersNotFrozen(migrationFrozen)
   const result = await importConversationExport({
     input: resolve(requestedInput),
     archive: resolve(requestedArchive),
-    apply: process.argv.includes('--apply'),
+    apply,
+    migrationFrozen,
   })
   console.log(JSON.stringify(result, null, 2))
   process.exitCode = result.ok ? 0 : 1

@@ -31,44 +31,48 @@ export const receiveConversationSegments = async (
       `the staging directory ${options.from} is inside the archive root ${options.root}`,
     )
   }
-  return withArchiveWriteLock(join(options.root, 'archive'), async () => {
-    const { generation, segments } = await readConversationArchiveGeneration(
-      options.root,
-    )
-    const report: ConversationSegmentReceiveReport = {
-      generationId: generation.generationId,
-      received: [],
-      alreadyPresent: [],
-      refused: [],
-      ignored: [],
-    }
-    if (options.expectedGenerationId !== generation.generationId) {
-      return {
-        ...report,
-        expectedGenerationId: options.expectedGenerationId,
-        refusedExchange: `the sender is on generation ${options.expectedGenerationId}, this archive on ${generation.generationId}; seed the generation instead`,
+  return withArchiveWriteLock(
+    join(options.root, 'archive'),
+    async () => {
+      const { generation, segments } = await readConversationArchiveGeneration(
+        options.root,
+      )
+      const report: ConversationSegmentReceiveReport = {
+        generationId: generation.generationId,
+        received: [],
+        alreadyPresent: [],
+        refused: [],
+        ignored: [],
       }
-    }
-    const names = (await fs.readdir(options.from)).toSorted((left, right) =>
-      left.localeCompare(right),
-    )
-    for (const name of names) {
-      if (name.startsWith('.')) {
-        report.ignored.push(name)
-        continue
+      if (options.expectedGenerationId !== generation.generationId) {
+        return {
+          ...report,
+          expectedGenerationId: options.expectedGenerationId,
+          refusedExchange: `the sender is on generation ${options.expectedGenerationId}, this archive on ${generation.generationId}; seed the generation instead`,
+        }
       }
-      const result = await receiveStagedConversationSegment({
-        stagingDirectory: options.from,
-        name,
-        segmentsDirectory: segments,
-        generation,
-      })
-      if (result.outcome === 'refused') {
-        report.refused.push({ name, reason: result.reason })
-      } else {
-        report[result.outcome].push(result.sha256)
+      const names = (await fs.readdir(options.from)).toSorted((left, right) =>
+        left.localeCompare(right),
+      )
+      for (const name of names) {
+        if (name.startsWith('.')) {
+          report.ignored.push(name)
+          continue
+        }
+        const result = await receiveStagedConversationSegment({
+          stagingDirectory: options.from,
+          name,
+          segmentsDirectory: segments,
+          generation,
+        })
+        if (result.outcome === 'refused') {
+          report.refused.push({ name, reason: result.reason })
+        } else {
+          report[result.outcome].push(result.sha256)
+        }
       }
-    }
-    return report
-  })
+      return report
+    },
+    options.migrationFrozen,
+  )
 }

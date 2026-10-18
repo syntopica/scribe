@@ -1,5 +1,6 @@
 import { homedir } from 'node:os'
 import { resolve } from 'node:path'
+import { assertConversationWritersNotFrozen } from '../lib/conversations/assertConversationWritersNotFrozen'
 import { conversationPathExists } from '../lib/conversations/conversationPathExists'
 import { exportConversations } from '../lib/conversations/exportConversations'
 import { parseConversationSources } from '../lib/conversations/parseConversationSources'
@@ -22,6 +23,8 @@ export const main = async () => {
     process.exitCode = 2
     return
   }
+
+  await assertConversationWritersNotFrozen()
 
   const home = flagValue(process.argv, '--home') ?? homedir()
   const output = resolve(requestedOutput)

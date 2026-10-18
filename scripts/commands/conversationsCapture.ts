@@ -1,12 +1,14 @@
 import { promises as fs } from 'node:fs'
 import { homedir } from 'node:os'
-import { dirname, resolve } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
+import { assertConversationWritersNotFrozen } from '../lib/conversations/assertConversationWritersNotFrozen'
 import { conversationPathExists } from '../lib/conversations/conversationPathExists'
 import { defaultConversationStatePath } from '../lib/conversations/defaultConversationStatePath'
 import { initializeConversationArchiveGeneration } from '../lib/conversations/initializeConversationArchiveGeneration'
 import { parseConversationSources } from '../lib/conversations/parseConversationSources'
 import { publishConversationCapture } from '../lib/conversations/publishConversationCapture'
 import { resolveConversationSegmentPaths } from '../lib/conversations/resolveConversationSegmentPaths'
+import { withArchiveWriteLock } from '../lib/conversations/withArchiveWriteLock'
 import { withPeakRssSampling } from '../lib/conversations/withPeakRssSampling'
 import { flagValue } from '../lib/machine/cli/flagValue'
 import { flagValues } from '../lib/machine/cli/flagValues'
@@ -43,6 +45,8 @@ export const main = async () => {
   )
   const createdAt = flagValue(process.argv, '--now') ?? new Date().toISOString()
 
+  await assertConversationWritersNotFrozen()
+
   const reference = resolveConversationSegmentPaths(root).reference
   if (!(await conversationPathExists(reference))) {
     if (!process.argv.includes('--init')) {
@@ -52,11 +56,15 @@ export const main = async () => {
       process.exitCode = 2
       return
     }
-    await initializeConversationArchiveGeneration({
-      root,
-      baseSegments: [],
-      createdAt,
-    })
+    // Under the lock capture publishes with, so a freeze that landed since
+    // the check above wins before a generation is selected.
+    await withArchiveWriteLock(join(root, 'archive'), async () =>
+      initializeConversationArchiveGeneration({
+        root,
+        baseSegments: [],
+        createdAt,
+      }),
+    )
   }
 
   await fs.mkdir(dirname(statePath), { recursive: true, mode: 0o700 })

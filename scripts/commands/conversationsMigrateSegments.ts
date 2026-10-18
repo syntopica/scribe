@@ -1,4 +1,5 @@
 import { resolve } from 'node:path'
+import { assertConversationWritersNotFrozen } from '../lib/conversations/assertConversationWritersNotFrozen'
 import { migrateConversationArchiveToSegments } from '../lib/conversations/migrateConversationArchiveToSegments'
 import { verifyConversationSegmentArchive } from '../lib/conversations/verifyConversationSegmentArchive'
 import { flagValue } from '../lib/machine/cli/flagValue'
@@ -27,12 +28,15 @@ export const main = async () => {
     return
   }
 
+  const migrationFrozen = process.argv.includes('--migration-frozen')
+  await assertConversationWritersNotFrozen(migrationFrozen)
   const root = resolve(requestedRoot)
   const migrated = await migrateConversationArchiveToSegments({
     archive: resolve(archive),
     root,
     buckets,
     createdAt: flagValue(process.argv, '--now') ?? new Date().toISOString(),
+    migrationFrozen,
   })
   const verified = await verifyConversationSegmentArchive({ root })
   console.log(

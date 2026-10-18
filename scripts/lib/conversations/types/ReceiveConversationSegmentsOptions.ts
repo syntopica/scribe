@@ -4,4 +4,6 @@ export interface ReceiveConversationSegmentsOptions {
   from: string
   /** The sender's inventory `generationId`; a mismatch refuses the exchange. */
   expectedGenerationId: string
+  /** `--migration-frozen`: a cutover step that runs inside the writer freeze. */
+  migrationFrozen?: boolean
 }

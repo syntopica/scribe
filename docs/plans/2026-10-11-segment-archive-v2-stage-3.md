@@ -308,9 +308,39 @@ cd "$HOME/p/scribe" && pnpm run check
 
 ### Scribe
 
-- [ ] Segment capture, erasure apply and segment receive refuse to run while the
-      sentinel exists, so a writer that bypasses the dotfiles wrappers is still
-      stopped.
+- [~] Segment capture, erasure apply and segment receive refuse to run while the
+  sentinel exists, so a writer that bypasses the dotfiles wrappers is still
+  stopped. Implemented, uncommitted; dotfiles has not adopted exit 75 yet.
+
+Where scribe looks: `$ROCKET_AGENTS_CONVERSATION_STATE/migration.freeze`, else
+`$HOME/.local/state/rocket-agents/conversations/migration.freeze`
+(`conversationFreezeSentinelPath`). That is the variable and default
+`sync-conversations` already uses for its state directory, so both sides name
+one file. It is not derived from `--state` or `--root`: a writer that bypasses
+the wrappers passes neither the way the wrappers do, and a flag that moved the
+sentinel would be a way around the freeze. As in the wrapper's
+`${VAR:-default}`, an empty value means unset; a relative one is refused.
+`XDG_STATE_HOME` is not consulted, because dotfiles does not consult it. Tests
+set the variable to a scratch directory; `pnpm run conversations:test` points it
+at a path that never exists.
+
+What refuses: `capture`, `export` (the v1 provider capture the live refresh runs
+today), `import --apply`, `rewrite --apply`, `migrate-segments`,
+`segments-receive`, `segments-seed-generation`, `erase apply` and
+`erase activate`. Each checks before any work and again once the archive write
+lock is held (`withArchiveWriteLock`), so a freeze that lands while a writer
+waits wins. `migrate-segments` and `capture --init` select their generation
+under that lock, and v1 `export`, which takes no lock, checks again just before
+its rename. Refusal is exit 75 (EX_TEMPFAIL) with one stderr line starting
+`frozen:`, distinct from usage (2) and failure (1). Readers (`verify-segments`,
+`segments-inventory`, `export-pending`, `export-materialized`, `erase plan`,
+`erase verify`, dry-run `import` and `rewrite`) still run.
+
+Stages 5 and 6 of the decision run import, migration, seed, receive and
+activation inside the freeze. Those commands accept `--migration-frozen`, the
+flag the decision already gives `sync-conversations`, to run while frozen.
+`capture`, `export` and `rewrite` have no such flag: no provider capture happens
+inside the freeze.
 
 ### Verification
 

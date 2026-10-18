@@ -1,6 +1,7 @@
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { assertConversationWritersNotFrozen } from './assertConversationWritersNotFrozen'
 import { captureConversationArtifacts } from './captureConversationArtifacts'
 import { ConversationCaptureStore } from './ConversationCaptureStore'
 import type { ConversationSource } from './types/ConversationSource'
@@ -40,6 +41,9 @@ export const exportConversations = async (
         output,
         new Date(),
         report.skipped,
+        // The capture above takes minutes on a live home; a freeze that landed
+        // meanwhile must still stop the publication.
+        () => assertConversationWritersNotFrozen(),
       ),
     }
   } finally {
