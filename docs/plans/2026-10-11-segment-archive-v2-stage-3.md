@@ -210,12 +210,15 @@ Each workstream starts only when the one before it passes its verification.
 
 ### Dotfiles
 
-- [ ] `sync-conversations <route> inventory|dry|sync|seed-generation` over
+- [x] `sync-conversations <route> inventory|dry|sync|seed-generation` over
       segments: rsync only the names missing on the other side into a staging
       directory, then call `scribe segments-receive`. The v1 path stays the
-      default until cutover.
-- [ ] Both routes to the same laptop must report one installation; tests cover
-      both aliases.
+      default until cutover. (dotfiles `cd71ade`, 2026-10-18: off unless the
+      host's `segment-mode` switch file exists; staging is per generation and
+      other generations' leftovers are reported as `staleStaging`, never
+      received; `--migration-frozen` passes the freeze in segment mode only.)
+- [x] Both routes to the same laptop must report one installation; tests cover
+      both aliases. (`cd71ade`: identity is host plus physical segment root.)
 
 ### Verification
 
@@ -299,18 +302,21 @@ cd "$HOME/p/scribe" && pnpm run check
 
 ### Dotfiles
 
-- [ ] A freeze sentinel at
+- [x] A freeze sentinel at
       `$HOME/.local/state/rocket-agents/conversations/migration.freeze`. The
       refresh script, both halves of `sync-conversations`, `sync-all-safe` and
       the Claude SessionEnd hook check it first and exit 0 with a logged
-      `frozen` line when it is present. Today none of them checks it.
-- [ ] `conversation-writers freeze|unfreeze|verify-frozen|verify-running`, per
+      `frozen` line when it is present. (dotfiles `58d7cfc`, 2026-10-18.)
+- [x] `conversation-writers freeze|unfreeze|verify-frozen|verify-running`, per
       trigger and `--all-peers`. Freezing waits for running writers rather than
-      terminating them.
-- [ ] The refresh pipeline in segment mode: one capture, `export-pending`,
+      terminating them. (`58d7cfc`; `a36fe4a`: an unresolvable peer fails
+      verification instead of being skipped.)
+- [x] The refresh pipeline in segment mode: one capture, `export-pending`,
       `atrium ingest --partial`, `ack-pending`; a full `export-materialized` and
       full ingest when the generation id changed since the last refresh. The v1
-      pipeline stays the default until cutover.
+      pipeline stays the default until cutover. (`cd71ade`; a partial capture,
+      exit 1, continues. Atrium `a8a5877` makes that full ingest sweep a
+      provider the generation no longer holds.)
 
 ### Scribe
 
@@ -411,6 +417,28 @@ Until a separate purge decision, rollback is cheap and has two levels:
 - [ ] Rebuild a test Atrium index from `export-materialized` and compare raw
       records, both FTS lanes, synthesis records and vector identities against
       the live index's inventory.
+
+### Rehearsal on the real archive (2026-10-18)
+
+On a clone of the live v1 archive (57,181 conversations, 7.32 GB):
+
+- `migrate-segments` wrote 32 base segments (6.8 GB), then node ran out of heap
+  in the verifier, which joined every record into one string; fixed in `4c4e10d`
+  (streamed digests). `verify-segments`: ok, 57,181 conversations, 2,933,724
+  events, 0 conflicts.
+- Parity: `export-materialized` against v1, record by record: same ids, same
+  order, same events and metadata; the only difference is the decided
+  `relativePath` shape (comma-joined string to sorted array). Getting there took
+  two reducer fixes: `1b6d6fc` (same-second events were ordered by id hash,
+  reordering user and assistant messages of 3,418 conversations) and `d839d84`
+  (source order decides over timestamps that run backwards; 2,254 more). With
+  `d839d84`: 57,181 of 57,181 in v1 order, 0 semantic differences.
+- Drill on a one-in-five real subset (11,437 conversations, 1.4 GB): every step
+  passed. Its peak was 22.6 GB, about 16 times the archive; the full-size drill
+  needs about 110 GB free (the first attempt was stopped by a disk-floor guard
+  at 59 GB).
+- Still open: the full-size drill, the Atrium test-index parity below, and the
+  four-installation transport test under workstream 1.
 
 ### Cutover gate
 
