@@ -262,22 +262,27 @@ every other line as a conversation (`atrium/ingest/read_archive.py`).
 
 ### Atrium
 
-- [ ] Ingest the vendored slice fixture with `--partial` in a test; assert the
-      conversations it names are written and every other conversation is
-      untouched.
-- [ ] Decide whether `--partial` should call `mark_revision_backfill`, or state
-      why it must not.
-- [ ] Erasure propagation. A partial slice can add and replace conversations but
-      never remove one, so after a generation change the refresh must run a full
-      ingest of `export-materialized`; the sweep then removes the erased
-      conversations. Test that, and that their vectors follow.
-- [ ] Derived records. Synthesis records and episodes built from an erased
-      conversation are not touched by the sweep. Decide how they are found and
-      removed (or re-synthesized) when a generation drops a conversation, and
-      test it.
-- [ ] `atrium doctor` and the staleness checks read the v1 archive path today.
-      Decide what they read after cutover: the materialized export, or the
-      segment inventory.
+- [x] (Atrium `tests/test_scribe_segment_contract.py`) Ingest the vendored slice
+      fixture with `--partial` in a test; assert the conversations it names are
+      written and every other conversation is untouched.
+- [x] Decide whether `--partial` should call `mark_revision_backfill`, or state
+      why it must not. Decided in Atrium: it must not, because the stamp claims
+      revisions cover every archived conversation and a slice covers a subset.
+- [x] (Atrium: a full ingest after a generation change removes the erased
+      conversation's rows, revision and vectors) Erasure propagation. A partial
+      slice can add and replace conversations but never remove one, so after a
+      generation change the refresh must run a full ingest of
+      `export-materialized`; the sweep then removes the erased conversations.
+      Test that, and that their vectors follow.
+- [x] (Atrium `atrium erase --plan <applied plan> [--apply]`) Derived records.
+      Synthesis records and episodes built from an erased conversation are not
+      touched by the sweep. Decide how they are found and removed (or
+      re-synthesized) when a generation drops a conversation, and test it.
+- [x] (Atrium 2026-10-16: `doctor --segment-inventory <file>` warns
+      `archive_generation_stale` / `archive_deliveries_pending`; the refresh
+      wiring is a dotfiles item) `atrium doctor` and the staleness checks read
+      the v1 archive path today. Decide what they read after cutover: the
+      materialized export, or the segment inventory.
 
 ### Verification
 
@@ -308,9 +313,10 @@ cd "$HOME/p/scribe" && pnpm run check
 
 ### Scribe
 
-- [~] Segment capture, erasure apply and segment receive refuse to run while the
-  sentinel exists, so a writer that bypasses the dotfiles wrappers is still
-  stopped. Implemented, uncommitted; dotfiles has not adopted exit 75 yet.
+- [x] Segment capture, erasure apply and segment receive refuse to run while the
+      sentinel exists, so a writer that bypasses the dotfiles wrappers is still
+      stopped (`a3b8a34`). Dotfiles has not adopted exit 75 yet; that is its
+      item.
 
 Where scribe looks: `$ROCKET_AGENTS_CONVERSATION_STATE/migration.freeze`, else
 `$HOME/.local/state/rocket-agents/conversations/migration.freeze`
