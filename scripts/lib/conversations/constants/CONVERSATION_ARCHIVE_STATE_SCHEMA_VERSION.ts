@@ -13,4 +13,6 @@
 // (2026-10-18).
 // 5: events sharing a timestamp keep source order instead of event-id order,
 // so a cached materialization is stale (2026-10-18).
-export const CONVERSATION_ARCHIVE_STATE_SCHEMA_VERSION = 5
+// 6: source order decides over timestamps; time only orders events no fragment
+// orders (2026-10-18).
+export const CONVERSATION_ARCHIVE_STATE_SCHEMA_VERSION = 6

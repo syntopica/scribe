@@ -99,13 +99,21 @@ void test('an archived harness event keeps its role when the conversation grows'
   for (const merged of [
     mergeConversationRecordFragments(before, after),
     mergeConversationRecordFragments(after, before),
-    materializeConversationFragmentSet([after, before]).record,
   ]) {
     assert.deepEqual(
       merged.events.map(({ role }) => role),
       ['user', 'assistant', 'user', 'tool', 'user'],
     )
   }
+  // The v2 reducer keeps the order the lines were written in, where the v1
+  // merge sorts by timestamp: here the harness line (08:00:25) precedes a
+  // follow-up stamped 08:00:20.
+  assert.deepEqual(
+    materializeConversationFragmentSet([after, before]).record.events.map(
+      ({ role }) => role,
+    ),
+    ['user', 'assistant', 'user', 'user', 'tool'],
+  )
 })
 
 void test('recapturing an archived conversation under the new rule changes nothing', async (context) => {

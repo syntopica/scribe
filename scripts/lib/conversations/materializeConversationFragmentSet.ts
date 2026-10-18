@@ -1,5 +1,4 @@
 import { collectConversationEventVariants } from './collectConversationEventVariants'
-import { compareConversationEvents } from './compareConversationEvents'
 import { deriveConversationFragmentSetProvenance } from './deriveConversationFragmentSetProvenance'
 import { hashConversationFragment } from './hashConversationFragment'
 import { mergeConversationHosts } from './mergeConversationHosts'
@@ -63,11 +62,14 @@ export const materializeConversationFragmentSet = (
   const events = orderConversationEventsBySource(
     collected.events,
     ordered.map(({ record }) => record),
-  ).toSorted(compareConversationEvents)
-
-  const timestamps = events.flatMap((event) =>
-    event.timestamp === undefined ? [] : [event.timestamp],
   )
+
+  // Sorted apart from the events: source order can run against the clock.
+  const timestamps = events
+    .flatMap((event) =>
+      event.timestamp === undefined ? [] : [event.timestamp],
+    )
+    .toSorted((left, right) => left.localeCompare(right))
   const startedAt =
     timestamps.at(0) ??
     ordered

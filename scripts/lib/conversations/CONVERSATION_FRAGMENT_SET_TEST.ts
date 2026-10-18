@@ -216,3 +216,27 @@ void test('events sharing a timestamp keep the order their source wrote them in'
     )
   }
 })
+
+void test('source order wins over timestamps that run backwards', () => {
+  const fragment = createConversationFragment({ id: 'clock', events: 3 })
+  // The source wrote e0, e1, e2, but e1's clock reads earliest.
+  const stamps = [
+    '2026-08-31T00:00:05.000Z',
+    '2026-08-31T00:00:01.000Z',
+    '2026-08-31T00:00:09.000Z',
+  ]
+  const events = fragment.events.map((event, index) => ({
+    ...event,
+    timestamp: stamps[index] ?? '',
+  }))
+  const written = events.map((event) => event.id)
+  const { record } = materializeConversationFragmentSet([
+    { ...fragment, events },
+  ])
+  assert.deepEqual(
+    record.events.map((e) => e.id),
+    written,
+  )
+  assert.equal(record.startedAt, '2026-08-31T00:00:01.000Z')
+  assert.equal(record.updatedAt, '2026-08-31T00:00:09.000Z')
+})
