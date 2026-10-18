@@ -1,6 +1,7 @@
-import { resolve } from 'node:path'
+import { join, resolve } from 'node:path'
 import { activateConversationArchiveGeneration } from '../lib/conversations/activateConversationArchiveGeneration'
 import { isConversationDigest } from '../lib/conversations/isConversationDigest'
+import { withArchiveWriteLock } from '../lib/conversations/withArchiveWriteLock'
 import { flagValue } from '../lib/machine/cli/flagValue'
 
 /**
@@ -21,10 +22,19 @@ export const conversationsEraseActivate = async (argv: string[]) => {
     process.exitCode = 2
     return
   }
-  const reference = await activateConversationArchiveGeneration({
-    root: resolve(requestedRoot),
-    generationId,
-    updatedAt: new Date(flagValue(argv, '--now') ?? Date.now()).toISOString(),
-  })
+  const root = resolve(requestedRoot)
+  // The lock capture, erase apply, receive and seed take: the selected
+  // generation cannot move while any of them is writing into it.
+  const reference = await withArchiveWriteLock(
+    join(root, 'archive'),
+    async () =>
+      activateConversationArchiveGeneration({
+        root,
+        generationId,
+        updatedAt: new Date(
+          flagValue(argv, '--now') ?? Date.now(),
+        ).toISOString(),
+      }),
+  )
   console.log(JSON.stringify(reference, null, 2))
 }

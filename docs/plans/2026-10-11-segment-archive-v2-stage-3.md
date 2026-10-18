@@ -168,12 +168,39 @@ Each workstream starts only when the one before it passes its verification.
       `scribe segments-inventory --root <root> --state <state>` prints the keys
       under "Contracts with Atrium". It replays no payload it has already
       indexed; the four full digests stay in `verify-segments`.
-- [ ] Segment receive: `scribe segments-receive --root <root> --from <staging>`
+- [x] Segment receive: `scribe segments-receive --root <root> --from <staging>`
       validates each staged segment through the generation barrier before
       linking it in. A segment whose header names another generation, or a base
       segment the manifest does not name, is refused and left in staging.
       Generation mismatch between the two inventories refuses the whole
       exchange; only an explicit `seed-generation` copies a whole generation.
+      Landed 2026-10-18. `<staging>` is flat: `s_<sha256>.jsonl` files, as the
+      transport copies the names the receiver lacks. `--expect-generation <id>`
+      is required and takes the sender's inventory `generationId`; a mismatch
+      refuses the whole exchange before any file is read. Under the archive
+      write lock each file is checked (name is the content digest, the segment
+      validates, header is this generation or a base segment its manifest
+      names), published (fsync, link, directory fsync) and only then removed
+      from staging; refused files stay with a reason; a staging directory inside
+      the root (by realpath) is refused; hidden names (rsync temporaries) are
+      ignored. An already-linked segment is re-hashed and synced, then
+      `alreadyPresent` (a corrupt one is refused as `destination corrupt` and
+      the staged copy kept), so a stopped receive finishes on rerun. JSON report
+      on stdout (`generationId`, `received`, `alreadyPresent`,
+      `refused[{name,reason}]`, `ignored`, and `refusedExchange` when refused
+      whole); exit 1 when anything was refused. The state is not touched: the
+      next command that opens it replays the new segments and marks their
+      conversations pending.
+      `scribe segments-seed-generation --root <root> --from <staging> --generation <id>`
+      is the `seed-generation`: `<staging>` has the archive layout,
+      `generations/g_<id>/{generation.json,segments/}`; the id must be the one
+      the base segments derive, every base segment must be staged and every
+      staged segment must pass the barrier, or nothing is seeded; the validated
+      manifest is written, not re-read. It selects nothing; activation is
+      `scribe erase activate --root <root> --generation <id>` (the same step as
+      an erasure cutover and its rollback), which takes the archive write lock.
+      `CONVERSATION_SEGMENT_RECEIVE_TEST.ts` (four installations, tampered,
+      interrupted, seed refusals), `SCRIBE_SEGMENTS_RECEIVE_CLI_TEST.ts`.
 - [x] `provenance.relativePath` is a sorted, unique `string[]` in the v2 model
       (2026-10-18), before the first live seed because it changes fragment
       hashes. Each entry is validated; an empty array is refused; v1 data is

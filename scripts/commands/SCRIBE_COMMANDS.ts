@@ -45,6 +45,16 @@ export const SCRIBE_COMMANDS: Readonly<Record<string, ScribeCommand>> = {
       'Print generationId, segments and pendingDeliveries of a store (--root)',
     load: () => import('./conversationsSegmentsInventory'),
   },
+  'segments-receive': {
+    summary:
+      'Link staged peer segments through the generation barrier (--root, --from)',
+    load: () => import('./conversationsSegmentsReceive'),
+  },
+  'segments-seed-generation': {
+    summary:
+      'Copy a whole staged generation without activating it (--generation)',
+    load: () => import('./conversationsSegmentsSeedGeneration'),
+  },
   'export-pending': {
     summary: 'Write the pending Atrium slice as an export (--root, --output)',
     load: () => import('./conversationsExportPending'),
