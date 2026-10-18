@@ -24,6 +24,7 @@ import type { ConversationRecord } from './types/ConversationRecord'
  */
 export class ConversationArchiveState {
   readonly #database: DatabaseSync
+  #transactionDepth = 0
 
   constructor(path: string) {
     this.#database = new DatabaseSync(path)
@@ -191,6 +192,26 @@ export class ConversationArchiveState {
       : []
   }
 
+  /**
+   * Run `work` in one transaction, rolled back if it throws. Inside an open
+   * transaction it joins that one, so the outer caller decides the commit.
+   */
+  transaction<T>(work: () => T): T {
+    if (this.#transactionDepth > 0) return work()
+    this.#database.exec('BEGIN')
+    this.#transactionDepth += 1
+    try {
+      const result = work()
+      this.#database.exec('COMMIT')
+      return result
+    } catch (error) {
+      this.#database.exec('ROLLBACK')
+      throw error
+    } finally {
+      this.#transactionDepth -= 1
+    }
+  }
+
   materialize(conversationId: string) {
     const { record, conflicts } = materializeConversationFragmentSet(
       this.fragments(conversationId),
@@ -305,7 +326,9 @@ export class ConversationArchiveState {
     const insert = this.#database.prepare(
       'INSERT OR IGNORE INTO pending_deliveries(conversation_id) VALUES (?)',
     )
-    for (const id of conversationIds) insert.run(id)
+    this.transaction(() => {
+      for (const id of conversationIds) insert.run(id)
+    })
   }
 
   pendingDeliveries() {
@@ -319,7 +342,9 @@ export class ConversationArchiveState {
     const remove = this.#database.prepare(
       'DELETE FROM pending_deliveries WHERE conversation_id = ?',
     )
-    for (const id of conversationIds) remove.run(id)
+    this.transaction(() => {
+      for (const id of conversationIds) remove.run(id)
+    })
   }
 
   counts() {

@@ -4,6 +4,7 @@ import { CONVERSATION_SEGMENT_FRAGMENT_LIMIT } from './constants/CONVERSATION_SE
 import { conversationCaptureVersionStamp } from './conversationCaptureVersionStamp'
 import { conversationHostLabel } from './conversationHostLabel'
 import { hashConversationFragment } from './hashConversationFragment'
+import { materializeConversations } from './materializeConversations'
 import { openConversationArchiveState } from './openConversationArchiveState'
 import { publishConversationSegment } from './publishConversationSegment'
 import { readConversationArchiveGeneration } from './readConversationArchiveGeneration'
@@ -142,7 +143,7 @@ export const publishConversationCapture = async (options: {
     })
     await flush()
 
-    for (const id of touched) state.materialize(id)
+    materializeConversations(state, touched)
     state.markPending([...touched])
 
     for (const row of rows) {

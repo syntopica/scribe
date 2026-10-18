@@ -6,6 +6,7 @@ import { ConversationArchiveState } from './ConversationArchiveState'
 import { createJoinedTextDigest } from './createJoinedTextDigest'
 import { hashText } from './hashText'
 import { listConversationArchiveSegments } from './listConversationArchiveSegments'
+import { materializeConversations } from './materializeConversations'
 import { readConversationArchiveGeneration } from './readConversationArchiveGeneration'
 import { readConversationArchiveSegment } from './readConversationArchiveSegment'
 import { serializeCanonicalConversationRecord } from './serializeCanonicalConversationRecord'
@@ -82,8 +83,7 @@ export const verifyConversationSegmentArchive = async (options: {
     const materializedState = createJoinedTextDigest()
     let events = 0
     let conflicts = 0
-    for (const id of conversationIds) {
-      const materialized = state.materialize(id)
+    materializeConversations(state, conversationIds, (id, materialized) => {
       conflicts += materialized.conflicts.length
       for (const eventId of materialized.record.events
         .map((event) => event.id)
@@ -94,7 +94,7 @@ export const verifyConversationSegmentArchive = async (options: {
       materializedState.add(
         serializeCanonicalConversationRecord(materialized.record),
       )
-    }
+    })
 
     return {
       ok: problems.length === 0,
