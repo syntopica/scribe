@@ -164,3 +164,55 @@ void test('a migrated fragment with a joined path contributes each path once', (
   const { record } = materializeConversationFragmentSet([legacy, fresh])
   assert.deepEqual(record.provenance.relativePath, ['a.jsonl', 'b.jsonl'])
 })
+
+void test('events sharing a timestamp keep the order their source wrote them in', () => {
+  const fragment = createConversationFragment({ id: 'tie', events: 4 })
+  const second = '2026-08-31T00:00:00.000Z'
+  // Ids chosen so their hash-like order is the reverse of the written order.
+  const events = fragment.events.map((event, index) => ({
+    ...event,
+    id: `tie-${String(9 - index)}`,
+    timestamp: second,
+  }))
+  const written = events.map((event) => event.id)
+  const grown = { ...fragment, events }
+  const partial = {
+    ...fragment,
+    events: events.slice(0, 2),
+    provenance: { ...fragment.provenance, contentSha256: 'partial' },
+  }
+  // Not a prefix: a capture that missed the first event.
+  const tail = {
+    ...fragment,
+    events: events.slice(1),
+    provenance: { ...fragment.provenance, contentSha256: 'tail' },
+  }
+
+  assert.deepEqual(
+    materializeConversationFragmentSet([grown]).record.events.map((e) => e.id),
+    written,
+  )
+  // Still independent of arrival order across fragments.
+  assert.deepEqual(
+    materializeConversationFragmentSet([partial, grown]).record.events.map(
+      (e) => e.id,
+    ),
+    written,
+  )
+  assert.deepEqual(
+    materializeConversationFragmentSet([grown, partial]).record.events.map(
+      (e) => e.id,
+    ),
+    written,
+  )
+  for (const set of [
+    [tail, grown],
+    [grown, tail],
+    [tail, tail, grown, partial],
+  ]) {
+    assert.deepEqual(
+      materializeConversationFragmentSet(set).record.events.map((e) => e.id),
+      written,
+    )
+  }
+})

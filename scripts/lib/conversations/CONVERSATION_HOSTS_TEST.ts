@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { join } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
 import test from 'node:test'
+import { CONVERSATION_ARCHIVE_STATE_SCHEMA_VERSION } from './constants/CONVERSATION_ARCHIVE_STATE_SCHEMA_VERSION'
 import { ConversationCaptureStore } from './ConversationCaptureStore'
 import { conversationHostLabel } from './conversationHostLabel'
 import { exportConversations } from './exportConversations'
@@ -349,7 +350,10 @@ void test('a state file from an older schema is replaced even when it holds no s
     assert.equal(rebuilt, false)
     assert.equal(replayed, 1)
     assert.equal(state.counts().fragments, 1)
-    assert.equal(state.meta('schemaVersion'), '4')
+    assert.equal(
+      state.meta('schemaVersion'),
+      String(CONVERSATION_ARCHIVE_STATE_SCHEMA_VERSION),
+    )
   } finally {
     state.close()
   }

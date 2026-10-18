@@ -205,7 +205,8 @@ Each workstream starts only when the one before it passes its verification.
       (2026-10-18), before the first live seed because it changes fragment
       hashes. Each entry is validated; an empty array is refused; v1 data is
       split once on read and the v1 wire form stays the joined string (see
-      "Contracts with Atrium"). State schema 4 replays any older state.
+      "Contracts with Atrium"). State schema 5 replays any older state (5:
+      same-timestamp events keep source order).
 
 ### Dotfiles
 

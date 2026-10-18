@@ -11,4 +11,6 @@
 // 3: fragments carry the hosts that observed them (2026-09-09).
 // 4: materialized provenance paths are an array, not a joined string
 // (2026-10-18).
-export const CONVERSATION_ARCHIVE_STATE_SCHEMA_VERSION = 4
+// 5: events sharing a timestamp keep source order instead of event-id order,
+// so a cached materialization is stale (2026-10-18).
+export const CONVERSATION_ARCHIVE_STATE_SCHEMA_VERSION = 5

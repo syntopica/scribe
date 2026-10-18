@@ -3,6 +3,7 @@ import { compareConversationEvents } from './compareConversationEvents'
 import { deriveConversationFragmentSetProvenance } from './deriveConversationFragmentSetProvenance'
 import { hashConversationFragment } from './hashConversationFragment'
 import { mergeConversationHosts } from './mergeConversationHosts'
+import { orderConversationEventsBySource } from './orderConversationEventsBySource'
 import type { ConversationFragmentSet } from './types/ConversationFragmentSet'
 import type { ConversationRecord } from './types/ConversationRecord'
 import { upgradeConversationRecord } from './upgradeConversationRecord'
@@ -55,10 +56,14 @@ export const materializeConversationFragmentSet = (
     }
   }
 
-  const { events, conflicts } = collectConversationEventVariants(
+  const collected = collectConversationEventVariants(
     ordered.map(({ record }) => record),
   )
-  events.sort(compareConversationEvents)
+  const conflicts = collected.conflicts
+  const events = orderConversationEventsBySource(
+    collected.events,
+    ordered.map(({ record }) => record),
+  ).toSorted(compareConversationEvents)
 
   const timestamps = events.flatMap((event) =>
     event.timestamp === undefined ? [] : [event.timestamp],

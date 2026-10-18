@@ -1,16 +1,18 @@
 import type { ConversationEvent } from './types/ConversationEvent'
 
 /**
- * The order events take in a materialized record.
+ * The order events take in a materialized record: by timestamp alone.
  *
- * By timestamp, then by id, so the sequence never depends on which fragment
- * arrived first. Events without a timestamp keep a stable place by id rather
- * than drifting to wherever the last merge put them.
+ * Callers sort stably over events already in source order
+ * (`orderConversationEventsBySource`), so ties keep the order the source wrote
+ * them in, and the sequence still never depends on which fragment arrived
+ * first. Breaking ties by event id instead
+ * shuffled same-second events by hash: on the real archive that reordered the
+ * user and assistant messages of 3,418 conversations, mostly Codex sessions,
+ * whose timestamps often share a second. Events without a timestamp sort
+ * first.
  */
 export const compareConversationEvents = (
   left: ConversationEvent,
   right: ConversationEvent,
-) => {
-  const byTime = (left.timestamp ?? '').localeCompare(right.timestamp ?? '')
-  return byTime === 0 ? left.id.localeCompare(right.id) : byTime
-}
+) => (left.timestamp ?? '').localeCompare(right.timestamp ?? '')
