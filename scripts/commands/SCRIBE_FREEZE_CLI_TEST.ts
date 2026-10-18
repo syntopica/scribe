@@ -31,6 +31,7 @@ void test('every writer refuses with 75 while frozen, readers run, unfreezing re
     v1,
     join(scratch, 'migrated'),
     peer,
+    join(scratch, 'drill-work'),
   ]
   const writers = [
     [
@@ -80,6 +81,13 @@ void test('every writer refuses with 75 while frozen, readers run, unfreezing re
       join(scratch, 'plan.json'),
     ],
     ['erase', 'activate', '--root', origin.root, '--generation', id],
+    [
+      'recovery-drill',
+      '--root',
+      origin.root,
+      '--work',
+      join(scratch, 'drill-work'),
+    ],
   ]
   const before = await snapshotConversationTree(origin.root)
   for (const args of writers) {

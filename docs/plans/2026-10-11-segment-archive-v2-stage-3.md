@@ -389,11 +389,18 @@ Until a separate purge decision, rollback is cheap and has two levels:
 
 ### Drill, on a disposable copy
 
-- [ ] `scribe recovery-drill --root <copy> --work <dir>     --exercise-erasure --exercise-stale-peer`:
+- [x] `scribe recovery-drill --root <copy> --work <dir>     --exercise-erasure --exercise-stale-peer`:
       delete the disposable state and rebuild it from segments; inject a
       synthetic target, erase it, verify; return a peer on the old generation
       and show it refused, then reseeded; activate the old generation and show
-      the digests restored.
+      the digests restored. (2026-10-18) Steps `baseline`, `rebuild`, `erasure`,
+      `stale-peer`, `rollback` in one JSON report; exit 0 only when all pass.
+      The target is injected as a sealed child generation, so the original
+      generation is never written and rollback equals the baseline exactly.
+      Refuses, with no override, a root or work directory overlapping
+      `$SYNTOPICA_DATA`, `$HOME/p/wiki/conversations` or
+      `$HOME/.local/share/rocket-agents`, and work and root inside each other;
+      takes `--migration-frozen` because it is rehearsed inside the freeze.
 - [ ] Rebuild a test Atrium index from `export-materialized` and compare raw
       records, both FTS lanes, synthesis records and vector identities against
       the live index's inventory.

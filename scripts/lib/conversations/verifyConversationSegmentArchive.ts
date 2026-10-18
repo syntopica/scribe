@@ -26,6 +26,8 @@ import { serializeCanonicalConversationRecord } from './serializeCanonicalConver
  */
 export const verifyConversationSegmentArchive = async (options: {
   root: string
+  /** Where the throwaway state goes; the system temporary directory by default. */
+  scratchDirectory?: string
 }) => {
   const { generation, segments } = await readConversationArchiveGeneration(
     options.root,
@@ -38,7 +40,7 @@ export const verifyConversationSegmentArchive = async (options: {
     )
 
   const statePath = join(
-    tmpdir(),
+    options.scratchDirectory ?? tmpdir(),
     `conversation-verify-${randomUUID()}.sqlite3`,
   )
   const state = new ConversationArchiveState(statePath)

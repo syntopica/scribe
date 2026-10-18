@@ -25,6 +25,7 @@
     "conversations:ack-pending": "tsx scripts/bin/run-conversations-ack-pending.ts",
     "conversations:export-materialized": "tsx scripts/bin/run-conversations-export-materialized.ts",
     "conversations:erase": "tsx scripts/bin/run-conversations-erase.ts",
+    "conversations:recovery-drill": "tsx scripts/bin/run-conversations-recovery-drill.ts",
     "conversations:benchmark-segments": "tsx scripts/bin/run-conversations-benchmark-segments.ts",
     "conversations:import": "tsx scripts/bin/run-conversations-import.ts",
     "conversations:rewrite": "tsx scripts/bin/run-conversations-rewrite.ts",

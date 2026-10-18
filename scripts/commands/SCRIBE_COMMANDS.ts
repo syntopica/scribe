@@ -72,6 +72,11 @@ export const SCRIBE_COMMANDS: Readonly<Record<string, ScribeCommand>> = {
       'Erase conversations: plan, apply, verify, activate (--root required)',
     load: () => import('./conversationsErase'),
   },
+  'recovery-drill': {
+    summary:
+      'Rehearse rebuild, erasure, stale peer and rollback on a disposable copy',
+    load: () => import('./conversationsRecoveryDrill'),
+  },
   'benchmark-segments': {
     summary: 'Acceptance benchmark of the segment format, synthetic data only',
     load: () => import('./conversationsBenchmarkSegments'),

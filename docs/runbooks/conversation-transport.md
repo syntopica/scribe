@@ -71,6 +71,37 @@ pnpm run conversations:render -- --input /tmp/scribe-archive.jsonl --output-dir 
 Atrium does not need the rendered corpus: it ingests the canonical archive
 directly (`atrium ingest <archive>`).
 
+## Recovery drill
+
+Rehearse recovery on a disposable copy of a segment archive, never on the live
+one:
+
+```bash
+pnpm run scribe recovery-drill --root /tmp/drill/copy --work /tmp/drill/work \
+  --exercise-erasure --exercise-stale-peer --migration-frozen
+```
+
+It records the `verify-segments` digests, deletes and rebuilds the state in
+`--work`, injects and erases a synthetic marker conversation, shows a peer on
+the old generation refused and then reseeded, and activates the original
+generation again with every digest restored. The JSON report names each step
+with its digests; the exit is 0 only when every step passed.
+
+The guard has no override: `--root` and `--work` are required, and the drill
+refuses either one inside or containing `$SYNTOPICA_DATA` (when set),
+`$HOME/p/wiki` (always), `$HOME/p/wiki/conversations` or
+`$HOME/.local/share/rocket-agents`; an unset or empty `HOME`; either one inside
+the other; any symbolic link under the root, so the copy must be a real copy
+(`cp -R`, not a tree of links); a non-empty `--work`; and a root with no active
+generation.
+
+The drill writes only inside `--root` and `--work`: the root gains the drill's
+generations, its lock and reference, and transient `.seal-*` scratch, so discard
+the copy afterwards; the state, the verifier's scratch state, the peer, the
+exports and the erasure plan stay in `--work`. Like every writer it exits 75
+while the migration freeze sentinel exists, unless `--migration-frozen` is
+passed.
+
 ## Exchange between machines
 
 Copy the canonical export with the existing authenticated SSH/rsync channel, run
