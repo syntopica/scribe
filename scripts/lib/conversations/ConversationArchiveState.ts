@@ -212,6 +212,13 @@ export class ConversationArchiveState {
       : undefined
   }
 
+  conversationIds() {
+    return this.#database
+      .prepare('SELECT id FROM conversations')
+      .all()
+      .map((row) => String(row['id']))
+  }
+
   *conversations() {
     const statement = this.#database.prepare(
       'SELECT record_json FROM conversations ORDER BY id',

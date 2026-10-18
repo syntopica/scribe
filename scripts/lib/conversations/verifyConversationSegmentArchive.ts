@@ -3,6 +3,7 @@ import { promises as fs } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { ConversationArchiveState } from './ConversationArchiveState'
+import { createJoinedTextDigest } from './createJoinedTextDigest'
 import { hashText } from './hashText'
 import { listConversationArchiveSegments } from './listConversationArchiveSegments'
 import { readConversationArchiveGeneration } from './readConversationArchiveGeneration'
@@ -23,6 +24,9 @@ import { serializeCanonicalConversationRecord } from './serializeCanonicalConver
  * which layer diverged -- a missing object, a lost conversation, a dropped
  * event branch, or a reducer disagreement -- instead of leaving an operator to
  * diff four gigabytes.
+ *
+ * Both content digests are fed in conversation-id order, events sorted within
+ * each conversation, so memory follows one record rather than the archive.
  */
 export const verifyConversationSegmentArchive = async (options: {
   root: string
@@ -74,16 +78,20 @@ export const verifyConversationSegmentArchive = async (options: {
     const conversationIds = [...touched].toSorted((left, right) =>
       left.localeCompare(right),
     )
-    const eventKeys: string[] = []
-    const recordBytes: string[] = []
+    const eventSet = createJoinedTextDigest()
+    const materializedState = createJoinedTextDigest()
+    let events = 0
     let conflicts = 0
     for (const id of conversationIds) {
       const materialized = state.materialize(id)
       conflicts += materialized.conflicts.length
-      for (const event of materialized.record.events) {
-        eventKeys.push(`${id} ${event.id}`)
+      for (const eventId of materialized.record.events
+        .map((event) => event.id)
+        .toSorted((left, right) => left.localeCompare(right))) {
+        eventSet.add(`${id} ${eventId}`)
+        events += 1
       }
-      recordBytes.push(
+      materializedState.add(
         serializeCanonicalConversationRecord(materialized.record),
       )
     }
@@ -95,22 +103,14 @@ export const verifyConversationSegmentArchive = async (options: {
       segments: present.length,
       entries,
       conversations: conversationIds.length,
-      events: eventKeys.length,
+      events,
       conflicts,
       problems,
       digests: {
         segmentSet: hashText(present.join('\n')),
         conversationIds: hashText(conversationIds.join('\n')),
-        eventSet: hashText(
-          eventKeys
-            .toSorted((left, right) => left.localeCompare(right))
-            .join('\n'),
-        ),
-        materializedState: hashText(
-          recordBytes
-            .toSorted((left, right) => left.localeCompare(right))
-            .join('\n'),
-        ),
+        eventSet: eventSet.digest(),
+        materializedState: materializedState.digest(),
       },
     }
   } finally {
