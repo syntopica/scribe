@@ -57,6 +57,11 @@ export const SCRIBE_COMMANDS: Readonly<Record<string, ScribeCommand>> = {
     summary: 'Write the full materialized export of a store (--root, --output)',
     load: () => import('./conversationsExportMaterialized'),
   },
+  erase: {
+    summary:
+      'Erase conversations: plan, apply, verify, activate (--root required)',
+    load: () => import('./conversationsErase'),
+  },
   'benchmark-segments': {
     summary: 'Acceptance benchmark of the segment format, synthetic data only',
     load: () => import('./conversationsBenchmarkSegments'),

@@ -125,11 +125,10 @@ Each workstream starts only when the one before it passes its verification.
 - [ ] Redaction replacement. `reason: "redaction"` has to re-run the current
       redactor over the named conversations and publish the replacement
       fragments into the new base. Today apply only removes.
-- [ ] `scribe erase plan|apply|verify|activate` (the library functions exist;
-      the command does not), with `--root` required and no default, so the
-      command cannot reach a live archive by omission. `plan` writes a
-      reviewable JSON file; `apply` takes that file; `activate` names the
-      generation id explicitly.
+- [x] `scribe erase plan|apply|verify|activate` (2026-10-18), with `--root`
+      required and no default, so the command cannot reach a live archive by
+      omission. `plan` writes a reviewable JSON file; `apply` takes that file;
+      `activate` names the generation id explicitly.
 - [x] Segment inventory:
       `scribe segments-inventory --root <root> --state <state>` prints the keys
       under "Contracts with Atrium". It replays no payload it has already

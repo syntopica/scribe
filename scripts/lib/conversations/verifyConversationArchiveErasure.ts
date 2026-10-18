@@ -1,3 +1,6 @@
+import { hashConversationSegmentSet } from './hashConversationSegmentSet'
+import { listConversationArchiveSegments } from './listConversationArchiveSegments'
+import { readConversationArchiveGenerationManifest } from './readConversationArchiveGenerationManifest'
 import { readConversationGenerationFragmentHashes } from './readConversationGenerationFragmentHashes'
 import type { VerifyConversationArchiveErasureOptions } from './types/VerifyConversationArchiveErasureOptions'
 
@@ -10,6 +13,10 @@ import type { VerifyConversationArchiveErasureOptions } from './types/VerifyConv
  * equality for everything the plan did not target. Each segment is read
  * through the generation barrier, so a segment copied in from another
  * generation surfaces here as a problem instead of being counted.
+ *
+ * The old generation must also still hold exactly the segment set the plan was
+ * computed from: a capture appended to it since would be missing from the new
+ * one, and cutting over would drop it.
  *
  * Read-only. It is the gate before cutover, and again after a peer is seeded.
  */
@@ -36,7 +43,23 @@ export const verifyConversationArchiveErasure = async (
   const unexpected = [...after.fragments]
     .filter((hash) => !before.fragments.has(hash))
     .toSorted((left, right) => left.localeCompare(right))
-  const problems = [...before.problems, ...after.problems]
+  const source = await readConversationArchiveGenerationManifest(
+    options.root,
+    options.plan.fromGenerationId,
+  )
+  const segmentSetMoved =
+    hashConversationSegmentSet(
+      await listConversationArchiveSegments(source.segments),
+    ) !== options.plan.segmentSetSha256
+  const problems = [
+    ...before.problems,
+    ...after.problems,
+    ...(segmentSetMoved
+      ? [
+          `generation ${options.plan.fromGenerationId}: its segment set is no longer the one the plan was computed from`,
+        ]
+      : []),
+  ]
 
   return {
     ok:
