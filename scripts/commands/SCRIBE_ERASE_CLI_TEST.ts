@@ -6,6 +6,7 @@ import { createConversationFragment } from '../lib/conversations/fixtures/create
 import { createConversationScratchDirectory } from '../lib/conversations/fixtures/createConversationScratchDirectory'
 import { createConversationSegment } from '../lib/conversations/fixtures/createConversationSegment'
 import { seedErasureArchiveWithCapture } from '../lib/conversations/fixtures/seedErasureArchiveWithCapture'
+import { seedRedactionArchive } from '../lib/conversations/fixtures/seedRedactionArchive'
 import { publishConversationSegment } from '../lib/conversations/publishConversationSegment'
 import { readConversationArchiveGeneration } from '../lib/conversations/readConversationArchiveGeneration'
 import { readConversationArchiveGenerationManifest } from '../lib/conversations/readConversationArchiveGenerationManifest'
@@ -129,8 +130,25 @@ void test('scribe erase refuses a missing root, an existing plan file and an unn
     '--output',
     join(work, 'r.json'),
   )
-  assert.equal(redaction.status, 2)
-  assert.match(redaction.stderr, /redaction is not supported/)
+  // Nothing in this archive needs redacting: no plan is written.
+  assert.equal(redaction.status, 1)
+  assert.match(redaction.stderr, /nothing to redact/)
+  await assert.rejects(fs.access(join(work, 'r.json')))
+
+  assert.equal(
+    runScribeErase(
+      'plan',
+      '--root',
+      root,
+      '--conversation',
+      'a',
+      '--reason',
+      'other',
+      '--output',
+      join(work, 'o.json'),
+    ).status,
+    2,
+  )
 
   assert.equal(runScribeErase('activate', '--root', root).status, 2)
   assert.equal(
@@ -324,4 +342,51 @@ void test('scribe erase verify fails when the old generation gained a segment af
     verified.stdout,
     /segment set is no longer the one the plan was computed from/,
   )
+})
+
+void test('scribe erase redacts only the conversations the redactor changes', async (context) => {
+  const { root } = await seedRedactionArchive(context)
+  const work = await createConversationScratchDirectory(context, 'erase-cli-')
+  const planFile = join(work, 'redaction-plan.json')
+
+  const planned = runScribeErase(
+    'plan',
+    '--root',
+    root,
+    '--conversation',
+    's',
+    '--conversation',
+    'b',
+    '--conversation',
+    'missing-id',
+    '--reason',
+    'redaction',
+    '--output',
+    planFile,
+  )
+  assert.equal(planned.status, 0, planned.stderr)
+  assert.partialDeepStrictEqual(JSON.parse(planned.stdout) as unknown, {
+    conversationIds: ['s'],
+    fragmentsRemoved: 1,
+    unchangedConversationIds: ['b'],
+    unmatchedConversationIds: ['missing-id'],
+    unredactableConversationIds: [],
+  })
+  const plan = await readConversationErasurePlanFile(planFile)
+  assert.deepEqual(plan.conversationIds, ['s'])
+  assert.match(plan.redactorSha256 ?? '', /^[0-9a-f]{64}$/)
+
+  const applied = runScribeErase('apply', '--root', root, '--plan', planFile)
+  assert.equal(applied.status, 0, applied.stderr)
+  assert.partialDeepStrictEqual(JSON.parse(applied.stdout) as unknown, {
+    fragmentsRemoved: 1,
+    fragmentsReplaced: 1,
+    unchanged: [],
+  })
+  const verified = runScribeErase('verify', '--root', root, '--plan', planFile)
+  assert.equal(verified.status, 0, verified.stdout + verified.stderr)
+  assert.partialDeepStrictEqual(JSON.parse(verified.stdout) as unknown, {
+    ok: true,
+    secretsPresent: [],
+  })
 })

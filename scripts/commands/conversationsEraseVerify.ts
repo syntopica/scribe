@@ -5,7 +5,8 @@ import { flagValue } from '../lib/machine/cli/flagValue'
 
 /**
  * Check the generation an applied plan names is the old one minus exactly the
- * planned fragments. Prints the report; exits 1 on any mismatch.
+ * planned fragments (plus, for a redaction, exactly their re-redacted
+ * replacements). Prints the report; exits 1 on any mismatch.
  */
 export const conversationsEraseVerify = async (argv: string[]) => {
   const requestedRoot = flagValue(argv, '--root')

@@ -40,6 +40,15 @@ export const validateConversationErasurePlan = (
     throw new Error('reason must be erasure, redaction or pack')
   }
   if (
+    plan.reason === 'redaction'
+      ? !isConversationDigest(plan.redactorSha256)
+      : plan.redactorSha256 !== undefined
+  ) {
+    throw new Error(
+      'redactorSha256 is a 64-character hex digest on a redaction plan, and absent otherwise',
+    )
+  }
+  if (
     !Array.isArray(plan.conversations) ||
     !Array.isArray(plan.conversationIds)
   )

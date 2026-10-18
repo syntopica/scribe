@@ -1,4 +1,5 @@
 import { listConversationArchiveSegments } from './listConversationArchiveSegments'
+import { noteConversationRedactionTarget } from './noteConversationRedactionTarget'
 import { planConversationArchiveErasure } from './planConversationArchiveErasure'
 import { readConversationArchiveGeneration } from './readConversationArchiveGeneration'
 import { readConversationArchiveSegment } from './readConversationArchiveSegment'
@@ -13,6 +14,12 @@ import type { PlanConversationArchiveErasureFromRootOptions } from './types/Plan
  * rather than the corpus. Every segment is read through the generation
  * barrier: a plan computed over a segment from another generation would bind
  * itself to a corpus apply will refuse.
+ *
+ * A redaction plan runs the current redactor over every requested fragment
+ * and plans only those it would change: Atrium drops the derived records of
+ * every conversation a plan names, so naming a clean one costs a re-synthesis
+ * for nothing. Requested conversations with secret text in a field the
+ * redactor cannot rewrite are reported into `unredactableConversationIds`.
  */
 export const planConversationArchiveErasureFromRoot = async (
   options: PlanConversationArchiveErasureFromRootOptions,
@@ -21,6 +28,15 @@ export const planConversationArchiveErasureFromRoot = async (
     options.root,
   )
   const present = await listConversationArchiveSegments(segments)
+  const requestedConversations = new Set(options.removeConversationIds ?? [])
+  const requestedFragments = new Set(options.removeFragmentSha256 ?? [])
+  const redacting = options.reason === 'redaction'
+  const targets = {
+    redactable: [] as string[],
+    ...(options.unredactableConversationIds === undefined
+      ? {}
+      : { unredactableConversationIds: options.unredactableConversationIds }),
+  }
   const entries: ConversationFragmentReference[] = []
   for (const sha256 of present) {
     const segment = await readConversationArchiveSegment({
@@ -33,6 +49,16 @@ export const planConversationArchiveErasureFromRoot = async (
         conversationId: entry.conversationId,
         fragmentSha256: entry.fragmentSha256,
       })
+      const conversationRequested = requestedConversations.has(
+        entry.conversationId,
+      )
+      if (conversationRequested)
+        options.matchedConversationIds?.add(entry.conversationId)
+      if (
+        redacting &&
+        (conversationRequested || requestedFragments.has(entry.fragmentSha256))
+      )
+        noteConversationRedactionTarget(entry, targets)
     }
   }
   return planConversationArchiveErasure({
@@ -41,11 +67,11 @@ export const planConversationArchiveErasureFromRoot = async (
     fromGenerationId: generation.generationId,
     createdAt: options.createdAt,
     reason: options.reason,
-    ...(options.removeFragmentSha256 === undefined
-      ? {}
-      : { removeFragmentSha256: options.removeFragmentSha256 }),
-    ...(options.removeConversationIds === undefined
-      ? {}
-      : { removeConversationIds: options.removeConversationIds }),
+    ...(redacting
+      ? { removeFragmentSha256: targets.redactable }
+      : {
+          removeFragmentSha256: [...requestedFragments],
+          removeConversationIds: [...requestedConversations],
+        }),
   })
 }

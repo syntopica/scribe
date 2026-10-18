@@ -15,7 +15,7 @@ export const planFragmentErasure = (options: {
     segmentSha256: options.segmentSha256 ?? ['segment-a'],
     fromGenerationId: 'gen-1',
     createdAt: '2026-08-31T23:30:00.000Z',
-    reason: options.reason ?? 'redaction',
+    reason: options.reason ?? 'erasure',
     ...(options.removeFragmentSha256 === undefined
       ? {}
       : { removeFragmentSha256: options.removeFragmentSha256 }),

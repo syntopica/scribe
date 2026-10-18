@@ -36,13 +36,6 @@ export const conversationsEraseApply = async (argv: string[]) => {
         process.exitCode = 2
         return undefined
       }
-      if (plan.reason === 'redaction') {
-        console.error(
-          'a redaction plan cannot be applied yet: apply only removes',
-        )
-        process.exitCode = 2
-        return undefined
-      }
       const sealed = await applyConversationArchiveErasure({
         root,
         plan,

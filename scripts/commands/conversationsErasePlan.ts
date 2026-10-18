@@ -11,7 +11,10 @@ import { flagValues } from '../lib/machine/cli/flagValues'
  * Reads the archive and writes nothing into it. The plan file is created, never
  * replaced, so an existing plan -- possibly already applied -- cannot be
  * overwritten by a second run. Ids that match nothing are reported rather than
- * silently dropped: a typo would otherwise plan an empty erasure.
+ * silently dropped: a typo would otherwise plan an empty erasure. A redaction
+ * plan names only the fragments the current redactor would change; requested
+ * conversations it finds clean are reported as `unchangedConversationIds`, and
+ * a request with nothing to redact writes no plan.
  */
 export const conversationsErasePlan = async (argv: string[]) => {
   const requestedRoot = flagValue(argv, '--root')
@@ -23,12 +26,8 @@ export const conversationsErasePlan = async (argv: string[]) => {
     process.exitCode = 2
     return
   }
-  if (reason !== 'erasure' && reason !== 'pack') {
-    console.error(
-      reason === 'redaction'
-        ? '--reason redaction is not supported yet: apply only removes fragments'
-        : '--reason must be erasure or pack',
-    )
+  if (reason !== 'erasure' && reason !== 'redaction' && reason !== 'pack') {
+    console.error('--reason must be erasure, redaction or pack')
     process.exitCode = 2
     return
   }
@@ -43,31 +42,47 @@ export const conversationsErasePlan = async (argv: string[]) => {
     process.exitCode = 2
     return
   }
+  const matched = new Set<string>()
+  const unredactable = new Set<string>()
   const plan = await planConversationArchiveErasureFromRoot({
     root: resolve(requestedRoot),
     createdAt: new Date(flagValue(argv, '--now') ?? Date.now()).toISOString(),
     reason,
     removeConversationIds: requested,
+    matchedConversationIds: matched,
+    unredactableConversationIds: unredactable,
   })
-  await writeNewConversationJsonFile(resolve(output), plan)
   const planned = new Set(plan.conversationIds)
-  console.log(
-    JSON.stringify(
-      {
-        plan: resolve(output),
-        fromGenerationId: plan.fromGenerationId,
-        reason: plan.reason,
-        conversationIds: plan.conversationIds,
-        fragmentsRemoved: plan.conversations.reduce(
-          (total, entry) => total + entry.removedFragmentSha256.length,
-          0,
-        ),
-        unmatchedConversationIds: [...new Set(requested)].filter(
-          (id) => !planned.has(id),
-        ),
-      },
-      null,
-      2,
+  const report = {
+    fromGenerationId: plan.fromGenerationId,
+    reason: plan.reason,
+    conversationIds: plan.conversationIds,
+    fragmentsRemoved: plan.conversations.reduce(
+      (total, entry) => total + entry.removedFragmentSha256.length,
+      0,
     ),
-  )
+    unmatchedConversationIds: [...new Set(requested)].filter(
+      (id) => !matched.has(id),
+    ),
+    ...(reason === 'redaction'
+      ? {
+          unchangedConversationIds: [...matched].filter(
+            (id) => !planned.has(id),
+          ),
+          unredactableConversationIds: [...unredactable].toSorted(
+            (left, right) => left.localeCompare(right),
+          ),
+        }
+      : {}),
+  }
+  if (reason === 'redaction' && plan.conversations.length === 0) {
+    console.log(JSON.stringify(report, null, 2))
+    console.error(
+      `nothing to redact: the current redactor changes no fragment of ${String(matched.size)} matched conversation(s); no plan written`,
+    )
+    process.exitCode = 1
+    return
+  }
+  await writeNewConversationJsonFile(resolve(output), plan)
+  console.log(JSON.stringify({ plan: resolve(output), ...report }, null, 2))
 }

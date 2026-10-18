@@ -1,3 +1,4 @@
+import { conversationRedactorSha256 } from './conversationRedactorSha256'
 import { hashConversationSegmentSet } from './hashConversationSegmentSet'
 import type { ConversationErasurePlan } from './types/ConversationErasurePlan'
 import type { ConversationFragmentReference } from './types/ConversationFragmentReference'
@@ -46,7 +47,10 @@ export const planConversationArchiveErasure = (options: {
         {
           conversationId,
           removedFragmentSha256: removed,
-          removesConversation: removed.length === new Set(hashes).size,
+          // A redaction replaces what it plans, so nothing of it disappears.
+          removesConversation:
+            options.reason !== 'redaction' &&
+            removed.length === new Set(hashes).size,
         },
       ]
     })
@@ -58,6 +62,9 @@ export const planConversationArchiveErasure = (options: {
     segmentSetSha256: hashConversationSegmentSet(options.segmentSha256),
     createdAt: options.createdAt,
     reason: options.reason,
+    ...(options.reason === 'redaction'
+      ? { redactorSha256: conversationRedactorSha256() }
+      : {}),
     conversationIds: conversations.map((entry) => entry.conversationId),
     conversations,
   }

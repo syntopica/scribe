@@ -7,4 +7,15 @@ export interface PlanConversationArchiveErasureFromRootOptions {
   reason: ConversationErasurePlan['reason']
   removeFragmentSha256?: readonly string[]
   removeConversationIds?: readonly string[]
+  /**
+   * Filled with every requested conversation id the archive holds, so a caller
+   * can tell an id that matched nothing from one a redaction found clean.
+   */
+  matchedConversationIds?: Set<string>
+  /**
+   * Filled, on a redaction, with every requested conversation holding secret
+   * text in a field the redactor cannot rewrite (ids, paths, hosts): the plan
+   * cannot clean those, and verify will fail on them.
+   */
+  unredactableConversationIds?: Set<string>
 }

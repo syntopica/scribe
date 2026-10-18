@@ -53,6 +53,7 @@ Atrium's `atrium erase --plan <file>` reads `conversationIds`.
 | `segmentSetSha256` | string (64 hex)                             | digest of the segment names the plan saw; apply refuses a moved archive                                                                                                |
 | `createdAt`        | ISO 8601 string                             |                                                                                                                                                                        |
 | `reason`           | `"erasure"`, `"redaction"` or `"pack"`      |                                                                                                                                                                        |
+| `redactorSha256`   | string (64 hex), optional                   | present on a `redaction` plan alone: fingerprint of the redactor it was computed with; apply refuses the plan once the redactor has changed. Atrium does not read it   |
 | `conversationIds`  | string[], sorted                            | every conversation the plan removes any fragment of, including one that keeps other fragments: a synthesis built from an erased fragment carries its text either way   |
 | `conversations`    | object[]                                    | per conversation: `conversationId`, `removedFragmentSha256` (sorted), `removesConversation` (true when nothing of it remains); same order and ids as `conversationIds` |
 
@@ -144,9 +145,21 @@ Each workstream starts only when the one before it passes its verification.
       reads one segment at a time and keeps only conversation ids and fragment
       hashes. The plan carries `conversationIds` and, once applied,
       `toGenerationId` (`recordConversationErasureTarget`).
-- [ ] Redaction replacement. `reason: "redaction"` has to re-run the current
-      redactor over the named conversations and publish the replacement
-      fragments into the new base. Today apply only removes.
+- [x] Redaction replacement (2026-10-18). `reason: "redaction"` plans run the
+      current redactor (`redactConversationRecord`: title, workspace and event
+      texts, event ids kept) and name only the fragments it would change, and
+      only conversations with at least one;
+      `scribe erase plan --reason redaction` reports clean requested ids as
+      `unchangedConversationIds` and writes no plan when nothing would change.
+      The plan carries `redactorSha256`; apply refuses it once the redactor has
+      changed and seals each planned fragment's replacement in its place in the
+      new base. Verify recomputes the replacements from the old generation and
+      checks old minus planned plus replacements, that no replacement still
+      matches the patterns, and that no redacted-away value appears in any
+      string of any fragment of the new generation; a secret in a field the
+      redactor cannot rewrite (ids, paths, hosts) fails as unredactable, and
+      plan reports it as `unredactableConversationIds`.
+      `CONVERSATION_ARCHIVE_REDACTION_TEST.ts`, `SCRIBE_ERASE_CLI_TEST.ts`.
 - [x] `scribe erase plan|apply|verify|activate` (2026-10-18), with `--root`
       required and no default, so the command cannot reach a live archive by
       omission. `plan` writes a reviewable JSON file; `apply` takes that file;

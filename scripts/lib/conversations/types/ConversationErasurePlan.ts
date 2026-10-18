@@ -20,6 +20,12 @@ export interface ConversationErasurePlan {
   createdAt: string
   reason: 'erasure' | 'redaction' | 'pack'
   /**
+   * Present on a redaction plan alone: the fingerprint of the redactor it was
+   * computed with (`conversationRedactorSha256`). Apply refuses the plan if
+   * the redactor has changed since.
+   */
+  redactorSha256?: string
+  /**
    * Every conversation the plan removes any fragment of, sorted. Part of the
    * contract with Atrium: `atrium erase --plan <file>` reads this field alone
    * and deletes the derived records of each id, because a synthesis built
@@ -29,9 +35,13 @@ export interface ConversationErasurePlan {
   conversationIds: string[]
   conversations: {
     conversationId: string
-    /** Fragment hashes that would not survive into the new generation. */
+    /**
+     * Fragment hashes that would not survive into the new generation. On a
+     * redaction, exactly the fragments the current redactor would change, each
+     * replaced by its re-redacted form.
+     */
     removedFragmentSha256: string[]
-    /** True when nothing of the conversation would remain. */
+    /** True when nothing of the conversation would remain; never on a redaction. */
     removesConversation: boolean
   }[]
 }
