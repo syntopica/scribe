@@ -155,12 +155,12 @@ void test('a migrated fragment with a joined path contributes each path once', (
     ...createConversationFragment({ id: 'c', events: 3, source: 'legacy' }),
     provenance: {
       contentSha256: 'legacy-merge',
-      relativePath: 'a.jsonl,b.jsonl',
+      relativePath: ['b.jsonl', 'a.jsonl'],
       redactions: 0,
     },
   }
   const fresh = createConversationFragment({ id: 'c', events: 2, source: 'a' })
 
   const { record } = materializeConversationFragmentSet([legacy, fresh])
-  assert.equal(record.provenance.relativePath, 'a.jsonl,b.jsonl')
+  assert.deepEqual(record.provenance.relativePath, ['a.jsonl', 'b.jsonl'])
 })

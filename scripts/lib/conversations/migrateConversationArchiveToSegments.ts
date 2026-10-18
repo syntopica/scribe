@@ -6,6 +6,7 @@ import { conversationFragmentBucketIndex } from './conversationFragmentBucketInd
 import { forEachLfLine } from './forEachLfLine'
 import { hashConversationFragment } from './hashConversationFragment'
 import { initializeConversationArchiveGeneration } from './initializeConversationArchiveGeneration'
+import { migratableConversationRecord } from './migratableConversationRecord'
 import { serializeConversationSegment } from './serializeConversationSegment'
 import { streamConversationExport } from './streamConversationExport'
 import type { ConversationRecord } from './types/ConversationRecord'
@@ -54,7 +55,9 @@ export const migrateConversationArchiveToSegments = async (options: {
     const streamed = await streamConversationExport(
       options.archive,
       (record: ConversationRecord) => {
-        const upgraded = upgradeConversationRecord(record)
+        const upgraded = upgradeConversationRecord(
+          migratableConversationRecord(record),
+        )
         const hash = hashConversationFragment(upgraded)
         if (seen.has(hash)) duplicates++
         seen.add(hash)

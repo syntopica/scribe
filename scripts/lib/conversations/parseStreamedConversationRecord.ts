@@ -1,5 +1,6 @@
 import { Buffer } from 'node:buffer'
 import { MAX_CONVERSATION_FILE_BYTES } from './constants/MAX_CONVERSATION_FILE_BYTES'
+import { conversationRecordFromStored } from './conversationRecordFromStored'
 import { isConversationRecord } from './isConversationRecord'
 
 export const parseStreamedConversationRecord = (
@@ -15,7 +16,7 @@ export const parseStreamedConversationRecord = (
   try {
     const parsed: unknown = JSON.parse(line)
     return isConversationRecord(parsed)
-      ? { record: parsed }
+      ? { record: conversationRecordFromStored(parsed) }
       : { error: `record ${String(recordNumber)} failed schema validation` }
   } catch {
     return { error: `record ${String(recordNumber)} is not valid JSON` }

@@ -47,16 +47,18 @@ export const mergeConversationRecordFragments = (
     left.provenance.contentSha256,
     right.provenance.contentSha256,
   ].toSorted((a, b) => a.localeCompare(b))
-  // Each side may already be a merge, so its path is a joined list; split it
-  // before taking the union or every re-merge repeats every earlier entry.
-  // Measured on the live archive: 3,225 records carried a joined path, one of
-  // them 87,269 entries long, 1.5 GB of the 7 GB file. The comma is the
-  // format's separator, so a source filename carrying one would be split
-  // here; none does on either Mac's sources (measured 2026-09-09), and the
-  // separator is the thing to change when the format next moves.
-  const relativePaths = [
+  // A union, not a concatenation: each side may already be a merge, and
+  // appending made every re-merge repeat every earlier entry. Measured on the
+  // live archive: 3,225 records carried a repeated path, one of them 87,269
+  // entries long, 1.5 GB of the 7 GB file. This merge only feeds the v1
+  // archive and `scribe export`, so it runs the v1 algorithm on the joined
+  // string exactly - split on commas, empties kept, union, sort - and its
+  // output joins back to the bytes the v1 code wrote for any input.
+  const relativePath = [
     ...new Set(
-      [left, right].flatMap((side) => side.provenance.relativePath.split(',')),
+      [left, right].flatMap((side) =>
+        side.provenance.relativePath.join(',').split(','),
+      ),
     ),
   ].toSorted((a, b) => a.localeCompare(b))
   const timestamps = [...events.values()]
@@ -82,7 +84,7 @@ export const mergeConversationRecordFragments = (
     events: ordered,
     provenance: {
       contentSha256: hashText(hashes.join('\0')),
-      relativePath: relativePaths.join(','),
+      relativePath,
       redactions: left.provenance.redactions + right.provenance.redactions,
     },
     ...(startedAt === undefined ? {} : { startedAt }),

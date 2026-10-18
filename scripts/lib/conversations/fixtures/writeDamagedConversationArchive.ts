@@ -32,7 +32,7 @@ export const writeDamagedConversationArchive = async (context: {
         text: index === 0 ? `cd ${home}/p/app` : event.text,
       })),
       hosts: ['peer-a'],
-      provenance: { ...leaked.provenance, relativePath: joinedPath },
+      provenance: { ...leaked.provenance, relativePath: joinedPath.split(',') },
     },
     {
       ...createConversationFragment({ id: 'clean', events: 2 }),

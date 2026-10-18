@@ -45,7 +45,7 @@ export const conversationRecordFromDocument = (
     events: qualifyConversationEventIds(events, id),
     provenance: {
       contentSha256: hashText(document.contents),
-      relativePath: document.relativePath,
+      relativePath: [document.relativePath],
       redactions,
     },
     ...(startedAt === undefined || updatedAt === undefined

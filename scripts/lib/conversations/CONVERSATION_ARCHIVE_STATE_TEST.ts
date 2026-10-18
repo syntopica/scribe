@@ -58,7 +58,10 @@ void test('a longer fragment of the same conversation adds events, never replace
   assert.ok(record)
   assert.equal(opened.state.counts().fragments, 2)
   assert.equal(record.events.length, 5)
-  assert.equal(record.provenance.relativePath, 'c1.jsonl,second-capture.jsonl')
+  assert.deepEqual(record.provenance.relativePath, [
+    'c1.jsonl',
+    'second-capture.jsonl',
+  ])
   opened.state.close()
 })
 

@@ -36,7 +36,7 @@ export const createConversationFragment = (options: {
     provenance: {
       contentSha256:
         options.source ?? `${options.id}-${String(options.events)}`,
-      relativePath: `${options.source ?? options.id}.jsonl`,
+      relativePath: [`${options.source ?? options.id}.jsonl`],
       redactions: 0,
     },
     ...(options.workspace === undefined

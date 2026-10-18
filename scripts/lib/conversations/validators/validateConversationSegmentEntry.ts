@@ -1,4 +1,5 @@
 import { hashConversationFragment } from '../hashConversationFragment'
+import { isConversationRelativePathList } from '../isConversationRelativePathList'
 import type { ConversationFragmentEntry } from '../types/ConversationFragmentEntry'
 
 /**
@@ -21,6 +22,14 @@ export const validateConversationSegmentEntry = (
   }
   if (entry.record === undefined || typeof entry.fragmentSha256 !== 'string') {
     throw new Error('segment entry is missing its record or hash')
+  }
+  if (!isConversationRelativePathList(entry.record.provenance.relativePath)) {
+    // A string here is a segment written before relativePath became an array
+    // (2026-10-18); its hash covers the old bytes, so it cannot be upgraded in
+    // place and has to be re-migrated from the v1 archive.
+    throw new Error(
+      'segment entry carries an unsafe or empty relativePath; a segment written before 2026-10-18 (string relativePath) is unreadable and must be re-migrated from the v1 archive',
+    )
   }
   if (entry.conversationId !== entry.record.id) {
     throw new Error(

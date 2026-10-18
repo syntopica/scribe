@@ -8,6 +8,7 @@ import { createConversationRecord } from './fixtures/createConversationRecord'
 import { hashText } from './hashText'
 import { importConversationExport } from './importConversationExport'
 import { readConversationExport } from './readConversationExport'
+import { serializeLegacyConversationRecord } from './serializeLegacyConversationRecord'
 import { writeConversationExport } from './writeConversationExport'
 import { writeConversationExportFromStore } from './writeConversationExportFromStore'
 
@@ -226,7 +227,7 @@ void test('the store yields current records verbatim and older ones upgraded', a
   )
   assert.equal(
     passedThrough,
-    JSON.stringify(current),
+    serializeLegacyConversationRecord(current),
     'a record already at the current version is not reserialized',
   )
   const upgraded = yielded.find((record) => record.id === 'older')

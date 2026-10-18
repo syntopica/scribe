@@ -1,3 +1,4 @@
+import { conversationRecordFromStored } from './conversationRecordFromStored'
 import { isConversationRecord } from './isConversationRecord'
 import type { ConversationRecord } from './types/ConversationRecord'
 import type { ConversationRecordsParseResult } from './types/ConversationRecordsParseResult'
@@ -12,7 +13,8 @@ export const parseConversationRecordLines = (
     if (line.trim() === '') continue
     try {
       const parsed: unknown = JSON.parse(line)
-      if (isConversationRecord(parsed)) records.push(parsed)
+      if (isConversationRecord(parsed))
+        records.push(conversationRecordFromStored(parsed))
       else errors.push(`record ${String(index + 1)} failed schema validation`)
     } catch {
       errors.push(`record ${String(index + 1)} is not valid JSON`)

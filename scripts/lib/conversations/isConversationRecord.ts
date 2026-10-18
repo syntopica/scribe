@@ -1,11 +1,12 @@
 import { isConversationEvent } from './isConversationEvent'
+import { isConversationRelativePathList } from './isConversationRelativePathList'
 import { isConversationSource } from './isConversationSource'
-import { isSafeConversationRelativePath } from './isSafeConversationRelativePath'
-import type { ConversationRecord } from './types/ConversationRecord'
+import { isLegacyConversationRelativePath } from './isLegacyConversationRelativePath'
+import type { StoredConversationRecord } from './types/StoredConversationRecord'
 
 export const isConversationRecord = (
   value: unknown,
-): value is ConversationRecord => {
+): value is StoredConversationRecord => {
   if (typeof value !== 'object' || value === null || Array.isArray(value))
     return false
   const record = value as Record<string, unknown>
@@ -28,8 +29,8 @@ export const isConversationRecord = (
     record['events'].length <= 100_000 &&
     record['events'].every(isConversationEvent) &&
     typeof origin['contentSha256'] === 'string' &&
-    typeof origin['relativePath'] === 'string' &&
-    isSafeConversationRelativePath(origin['relativePath']) &&
+    (isConversationRelativePathList(origin['relativePath']) ||
+      isLegacyConversationRelativePath(origin['relativePath'])) &&
     typeof origin['redactions'] === 'number' &&
     (record['hosts'] === undefined ||
       (Array.isArray(record['hosts']) &&

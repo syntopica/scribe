@@ -63,7 +63,7 @@ void test('an apply keeps ids, hashes and hosts, redacts and dedups, and is a fi
   assert.equal(leaked.title, '[HOME]/p/app')
   assert.equal(leaked.workspace, '[HOME]/p/app')
   assert.equal(leaked.events[0]?.text, 'cd [HOME]/p/app')
-  assert.equal(leaked.provenance.relativePath, 'a.jsonl,b.jsonl')
+  assert.deepEqual(leaked.provenance.relativePath, ['a.jsonl', 'b.jsonl'])
   assert.equal(
     leaked.provenance.contentSha256,
     records[0]?.provenance.contentSha256,

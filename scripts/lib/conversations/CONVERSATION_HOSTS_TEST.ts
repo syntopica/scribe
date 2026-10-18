@@ -349,7 +349,7 @@ void test('a state file from an older schema is replaced even when it holds no s
     assert.equal(rebuilt, false)
     assert.equal(replayed, 1)
     assert.equal(state.counts().fragments, 1)
-    assert.equal(state.meta('schemaVersion'), '3')
+    assert.equal(state.meta('schemaVersion'), '4')
   } finally {
     state.close()
   }

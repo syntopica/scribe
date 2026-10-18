@@ -1,3 +1,4 @@
+import { canonicalConversationRelativePaths } from './canonicalConversationRelativePaths'
 import type { ConversationEvent } from './types/ConversationEvent'
 import type { ConversationRecord } from './types/ConversationRecord'
 
@@ -8,7 +9,9 @@ import type { ConversationRecord } from './types/ConversationRecord'
  * from whatever order a parser happened to produce: two hosts that captured
  * the same conversation must agree byte for byte or they will publish it
  * twice. The order below is the declared interface order, and an absent
- * optional is omitted rather than emitted as null.
+ * optional is omitted rather than emitted as null. `provenance.relativePath`
+ * is sorted and deduplicated for the same reason: a fragment migrated from v1
+ * carries its joined path split in whatever order v1 wrote it.
  *
  * The result contains no character any reader will mistake for a line break.
  * JSON escapes the control characters, but not U+2028 and U+2029, and Node's
@@ -36,7 +39,9 @@ export const serializeCanonicalConversationRecord = (
     })),
     provenance: {
       contentSha256: record.provenance.contentSha256,
-      relativePath: record.provenance.relativePath,
+      relativePath: canonicalConversationRelativePaths(
+        record.provenance.relativePath,
+      ),
       redactions: record.provenance.redactions,
     },
     ...(record.startedAt === undefined ? {} : { startedAt: record.startedAt }),

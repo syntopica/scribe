@@ -7,6 +7,7 @@ import { ARCHIVE_CONTRACT_FIXTURE_ROOT } from './constants/ARCHIVE_CONTRACT_FIXT
 import type { ConversationErasurePlan } from './types/ConversationErasurePlan'
 import type { ConversationExportManifest } from './types/ConversationExportManifest'
 import type { ConversationRecord } from './types/ConversationRecord'
+import type { StoredConversationRecord } from './types/StoredConversationRecord'
 import { writeArchiveContractFixture } from './writeArchiveContractFixture'
 import { writeArchiveContractSliceFixture } from './writeArchiveContractSliceFixture'
 import { writeErasedMaterializedContractFixture } from './writeErasedMaterializedContractFixture'
@@ -28,6 +29,13 @@ void test('the committed contract export is what scribe writes today', async (co
       'utf8',
     ),
   )
+  // `scribe export` is the v1 path Atrium ingests until cutover, so it keeps
+  // the comma-joined string; only the v2 exports carry the array.
+  const lines = (await fs.readFile(output, 'utf8')).trimEnd().split('\n')
+  for (const line of lines.slice(1)) {
+    const record = JSON.parse(line) as StoredConversationRecord
+    assert.equal(typeof record.provenance.relativePath, 'string')
+  }
 })
 
 void test('the committed pending slice is what scribe writes today', async (context) => {
@@ -65,6 +73,16 @@ void test('the committed pending slice is what scribe writes today', async (cont
     (line) => (JSON.parse(line) as ConversationRecord).id,
   )
   assert.equal(sliceIds.length, 1)
+  // v2 records carry every source path as a sorted array of strings.
+  for (const line of lines) {
+    const { relativePath } = (JSON.parse(line) as ConversationRecord).provenance
+    assert.equal(Array.isArray(relativePath), true)
+    assert.equal(relativePath.length > 0, true)
+    assert.deepEqual(
+      relativePath,
+      relativePath.toSorted((left, right) => left.localeCompare(right)),
+    )
+  }
   assert.equal(sliceIds.length < fullIds.length, true)
   assert.equal(
     sliceIds.every((id) => fullIds.includes(id)),

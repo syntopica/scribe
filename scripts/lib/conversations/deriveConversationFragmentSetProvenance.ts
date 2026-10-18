@@ -1,3 +1,4 @@
+import { canonicalConversationRelativePaths } from './canonicalConversationRelativePaths'
 import { hashText } from './hashText'
 import type { ConversationProvenance } from './types/ConversationProvenance'
 import type { ConversationRecord } from './types/ConversationRecord'
@@ -15,16 +16,9 @@ export const deriveConversationFragmentSetProvenance = (
   fragments: { hash: string; record: ConversationRecord }[],
 ): ConversationProvenance => ({
   contentSha256: hashText(fragments.map(({ hash }) => hash).join('\n')),
-  // A fragment migrated from the v1 archive may carry a joined path already.
-  relativePath: [
-    ...new Set(
-      fragments.flatMap(({ record }) =>
-        record.provenance.relativePath.split(','),
-      ),
-    ),
-  ]
-    .toSorted((left, right) => left.localeCompare(right))
-    .join(','),
+  relativePath: canonicalConversationRelativePaths(
+    fragments.flatMap(({ record }) => record.provenance.relativePath),
+  ),
   redactions: fragments.reduce(
     (total, { record }) => total + record.provenance.redactions,
     0,

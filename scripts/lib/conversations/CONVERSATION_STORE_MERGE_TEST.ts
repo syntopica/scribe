@@ -35,7 +35,7 @@ void test('a fragment the store has already absorbed is a duplicate, not an upda
       provenance: {
         ...shorter.provenance,
         contentSha256: 'recovered-c-2',
-        relativePath: 'recovered/c.jsonl',
+        relativePath: ['recovered/c.jsonl'],
       },
     }
     assert.equal(store.mergeFragment(recovered), 'updated')
@@ -61,7 +61,7 @@ void test('merging a record that already carries a joined path does not repeat e
       ...createConversationFragment({ id: 'c', events: 3 }),
       provenance: {
         contentSha256: 'merged-a-b',
-        relativePath: 'a.jsonl,b.jsonl',
+        relativePath: ['a.jsonl', 'b.jsonl'],
         redactions: 0,
       },
       startedAt: '2026-08-31T00:00:00.000Z',

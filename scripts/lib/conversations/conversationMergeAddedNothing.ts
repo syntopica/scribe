@@ -21,9 +21,9 @@ export const conversationMergeAddedNothing = (
       ...record,
       provenance: {
         contentSha256: '',
-        relativePath: record.provenance.relativePath,
+        relativePath: [],
         redactions: 0,
       },
-    })}\n${JSON.stringify(record.hosts ?? [])}`
+    })}\n${record.provenance.relativePath.join(',')}\n${JSON.stringify(record.hosts ?? [])}`
   return comparable(current) === comparable(merged)
 }

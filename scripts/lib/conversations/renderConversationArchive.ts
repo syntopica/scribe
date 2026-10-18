@@ -3,10 +3,11 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { ConversationCaptureStore } from './ConversationCaptureStore'
+import { conversationRecordFromStored } from './conversationRecordFromStored'
 import { loadConversationExportStore } from './loadConversationExportStore'
 import { renderConversationRecordMarkdown } from './renderConversationRecordMarkdown'
-import type { ConversationRecord } from './types/ConversationRecord'
 import type { ConversationRenderResult } from './types/ConversationRenderResult'
+import type { StoredConversationRecord } from './types/StoredConversationRecord'
 
 export const renderConversationArchive = async (options: {
   input: string
@@ -32,7 +33,9 @@ export const renderConversationArchive = async (options: {
     if (options.apply) {
       await fs.mkdir(options.outputDirectory, { recursive: true, mode: 0o700 })
       for (const serialized of store.serializedRecords()) {
-        const record = JSON.parse(serialized) as ConversationRecord
+        const record = conversationRecordFromStored(
+          JSON.parse(serialized) as StoredConversationRecord,
+        )
         const output = join(options.outputDirectory, `${record.id}.md`)
         const temporary = `${output}.tmp-${String(process.pid)}`
         await fs.writeFile(

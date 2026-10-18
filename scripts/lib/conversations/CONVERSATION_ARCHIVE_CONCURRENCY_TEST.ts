@@ -82,7 +82,7 @@ void test('exchanging two revisions of one conversation loses neither side', asy
         { id: 'e1', kind: 'message', role: 'user', text: 'one' },
         { id: 'e2', kind: 'message', role: 'assistant', text: 'only mine' },
       ],
-      provenance: { contentSha256: 'mine', relativePath: 'a', redactions: 0 },
+      provenance: { contentSha256: 'mine', relativePath: ['a'], redactions: 0 },
     }
     const theirs: ConversationRecord = {
       ...createArchiveRecord('shared'),
@@ -90,7 +90,11 @@ void test('exchanging two revisions of one conversation loses neither side', asy
         { id: 'e1', kind: 'message', role: 'user', text: 'one' },
         { id: 'e3', kind: 'message', role: 'assistant', text: 'only theirs' },
       ],
-      provenance: { contentSha256: 'theirs', relativePath: 'b', redactions: 0 },
+      provenance: {
+        contentSha256: 'theirs',
+        relativePath: ['b'],
+        redactions: 0,
+      },
     }
     await writeConversationExport([mine], archive)
     await writeConversationExport([theirs], remote)

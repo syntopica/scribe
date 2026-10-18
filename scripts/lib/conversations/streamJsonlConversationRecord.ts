@@ -109,7 +109,7 @@ export const streamJsonlConversationRecord = async (
     events: qualifyConversationEventIds(events, id),
     provenance: {
       contentSha256: hash.digest('hex'),
-      relativePath: artifact.relativePath,
+      relativePath: [artifact.relativePath],
       redactions,
     },
     ...(startedAt === undefined || updatedAt === undefined

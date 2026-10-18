@@ -9,5 +9,9 @@ export const createArchiveRecord = (id: string): ConversationRecord => ({
   sourceId: id,
   title: id,
   events: [{ id: `${id}-e`, kind: 'message', role: 'user', text: id }],
-  provenance: { contentSha256: id, relativePath: `${id}.jsonl`, redactions: 0 },
+  provenance: {
+    contentSha256: id,
+    relativePath: [`${id}.jsonl`],
+    redactions: 0,
+  },
 })

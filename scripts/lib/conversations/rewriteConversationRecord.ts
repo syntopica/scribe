@@ -1,3 +1,4 @@
+import { canonicalConversationRelativePaths } from './canonicalConversationRelativePaths'
 import { redactConversationHome } from './redactConversationHome'
 import type { ConversationRecord } from './types/ConversationRecord'
 import type { ConversationRewriteChanges } from './types/ConversationRewriteChanges'
@@ -27,16 +28,13 @@ export const rewriteConversationRecord = (
   changes.records++
   if (record.schemaVersion !== 2) changes.legacyRecords++
 
-  const joined = record.provenance.relativePath
-  const relativePath = [
-    ...new Set(joined.split(',').filter((entry) => entry.length > 0)),
-  ]
-    .toSorted((left, right) => left.localeCompare(right))
-    .join(',')
-  const pathChanged = relativePath !== joined
+  // Compared and measured in the v1 joined form, which is what this rewrites.
+  const joined = record.provenance.relativePath.join(',')
+  const relativePath = canonicalConversationRelativePaths(joined.split(','))
+  const pathChanged = relativePath.join(',') !== joined
   if (pathChanged) {
     changes.pathsNormalized++
-    changes.pathBytesSaved += joined.length - relativePath.length
+    changes.pathBytesSaved += joined.length - relativePath.join(',').length
   }
 
   const redacted = [...homes]

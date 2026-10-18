@@ -2,10 +2,13 @@ import { chmodSync } from 'node:fs'
 import { DatabaseSync } from 'node:sqlite'
 import { CONVERSATION_SCHEMA_VERSION } from './constants/CONVERSATION_SCHEMA_VERSION'
 import { conversationMergeAddedNothing } from './conversationMergeAddedNothing'
+import { conversationRecordFromStored } from './conversationRecordFromStored'
 import { mergeConversationHosts } from './mergeConversationHosts'
 import { mergeConversationRecordFragments } from './mergeConversationRecordFragments'
+import { serializeLegacyConversationRecord } from './serializeLegacyConversationRecord'
 import type { ConversationRecord } from './types/ConversationRecord'
 import type { ConversationStoreChange } from './types/ConversationStoreChange'
+import type { StoredConversationRecord } from './types/StoredConversationRecord'
 import { upgradeConversationRecord } from './upgradeConversationRecord'
 
 export class ConversationCaptureStore {
@@ -32,13 +35,15 @@ export class ConversationCaptureStore {
     if (existing === undefined || typeof existing['record_json'] !== 'string') {
       this.#upsert.run(
         record.id,
-        JSON.stringify(record),
+        serializeLegacyConversationRecord(record),
         record.provenance.redactions,
         record.schemaVersion,
       )
       return 'added'
     }
-    const current = JSON.parse(existing['record_json']) as ConversationRecord
+    const current = conversationRecordFromStored(
+      JSON.parse(existing['record_json']) as StoredConversationRecord,
+    )
     if (current.provenance.contentSha256 === record.provenance.contentSha256) {
       // Same bytes, so nothing about the conversation moves - but a second
       // machine reading them is worth one write, or the archive would never
@@ -49,7 +54,7 @@ export class ConversationCaptureStore {
       const observed = { ...current, ...(hosts === undefined ? {} : { hosts }) }
       this.#upsert.run(
         observed.id,
-        JSON.stringify(observed),
+        serializeLegacyConversationRecord(observed),
         observed.provenance.redactions,
         observed.schemaVersion,
       )
@@ -59,7 +64,7 @@ export class ConversationCaptureStore {
     if (conversationMergeAddedNothing(current, merged)) return 'duplicate'
     this.#upsert.run(
       merged.id,
-      JSON.stringify(merged),
+      serializeLegacyConversationRecord(merged),
       merged.provenance.redactions,
       merged.schemaVersion,
     )
@@ -77,18 +82,20 @@ export class ConversationCaptureStore {
     if (existing === undefined || typeof existing['record_json'] !== 'string') {
       this.#upsert.run(
         record.id,
-        JSON.stringify(record),
+        serializeLegacyConversationRecord(record),
         record.provenance.redactions,
         record.schemaVersion,
       )
       return 'added'
     }
-    const current = JSON.parse(existing['record_json']) as ConversationRecord
+    const current = conversationRecordFromStored(
+      JSON.parse(existing['record_json']) as StoredConversationRecord,
+    )
     if (current.provenance.contentSha256 === record.provenance.contentSha256)
       return 'duplicate'
     this.#upsert.run(
       record.id,
-      JSON.stringify(record),
+      serializeLegacyConversationRecord(record),
       record.provenance.redactions,
       record.schemaVersion,
     )
@@ -121,9 +128,10 @@ export class ConversationCaptureStore {
         yield row['record_json']
         continue
       }
-      const stored = JSON.parse(row['record_json']) as ConversationRecord
-      const upgraded = upgradeConversationRecord(stored)
-      yield upgraded === stored ? row['record_json'] : JSON.stringify(upgraded)
+      const stored = conversationRecordFromStored(
+        JSON.parse(row['record_json']) as StoredConversationRecord,
+      )
+      yield serializeLegacyConversationRecord(upgradeConversationRecord(stored))
     }
   }
 

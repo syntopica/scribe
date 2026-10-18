@@ -69,7 +69,29 @@ per line. The fixture holds the Claude Code conversation of `export.jsonl`
 alone, a strict subset, for Atrium's `ingest --partial` test. Its records are
 materialized from the fragment set, so `provenance.contentSha256` is the
 fragment-set provenance and differs from the v1 export's value for the same
-conversation; ids, events and every other field are equal.
+conversation, and `provenance.relativePath` is an array where the v1 export has
+a string (see below); ids, events and every other field are equal.
+
+**`provenance.relativePath`** (since 2026-10-18). In every v2 record - segment
+fragments, `export-materialized`, `export-pending` - it is a `string[]`: every
+source path the conversation was read from, relative to the home, sorted
+(`localeCompare`), unique, at least one entry, each entry neither absolute nor
+traversing (`isSafeConversationRelativePath`). A record that breaks this is
+refused on read. The v1 archive, its transfer files and `scribe export` keep the
+comma-joined string until cutover, byte for byte: a peer still on the v1 reader
+rejects an array, and the v1 export's bytes and manifest hash are what Atrium
+has already ingested. Per-record `contentSha256` never covered the path in v1 (a
+source-content hash, or a hash of hashes after a merge), so it does not move
+there. In v2 it does: the fragment hash covers the canonical record, so the
+fragment-set `contentSha256` of every materialized record changed with this
+format. Reading v1 data (`scribe migrate-segments`, `import`, `rewrite`) splits
+the joined string once and accepts what v1 accepted (the whole string checked as
+one path); the v1 merge keeps the v1 string algorithm, so v1 bytes match the
+code before this change for any input. Migration into v2 drops each empty,
+absolute or traversing entry and refuses a record left with none. Segments
+written before this change (string `relativePath`, old fragment hashes) are
+unreadable and must be re-migrated from the v1 archive; none exist live. Atrium
+does not read this field.
 
 **Generation stamp on materialized exports.** The manifest line of every
 `export-materialized` and `export-pending` file carries two more fields after
@@ -139,10 +161,11 @@ Each workstream starts only when the one before it passes its verification.
       segment the manifest does not name, is refused and left in staging.
       Generation mismatch between the two inventories refuses the whole
       exchange; only an explicit `seed-generation` copies a whole generation.
-- [ ] The comma-joined `provenance.relativePath` (backlog item "Conversations
-      export"): decide whether stage 3 carries it as an array. It changes
-      fragment hashes, so if it lands it lands before the first live seed, never
-      after.
+- [x] `provenance.relativePath` is a sorted, unique `string[]` in the v2 model
+      (2026-10-18), before the first live seed because it changes fragment
+      hashes. Each entry is validated; an empty array is refused; v1 data is
+      split once on read and the v1 wire form stays the joined string (see
+      "Contracts with Atrium"). State schema 4 replays any older state.
 
 ### Dotfiles
 
