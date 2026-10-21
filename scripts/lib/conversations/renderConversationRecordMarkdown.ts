@@ -3,6 +3,9 @@ import type { ConversationRecord } from './types/ConversationRecord'
 
 export const renderConversationRecordMarkdown = (record: ConversationRecord) =>
   [
+    ...(record.hosts === undefined
+      ? []
+      : ['---', `hosts: ${JSON.stringify(record.hosts)}`, '---', '']),
     `# ${record.title}`,
     '',
     `- Source: ${record.source}`,

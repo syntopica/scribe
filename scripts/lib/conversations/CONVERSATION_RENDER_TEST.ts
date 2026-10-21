@@ -12,7 +12,10 @@ void test('render produces a dry-run plan and a Memstore-readable Markdown corpu
   context.after(async () => fs.rm(root, { recursive: true, force: true }))
   const input = join(root, 'input.jsonl')
   const outputDirectory = join(root, 'rendered')
-  const record = createConversationRecord()
+  const record = {
+    ...createConversationRecord(),
+    hosts: ['macbook', 'peer "quoted"\n---\ninjected: true'],
+  }
   await writeConversationExport(
     [record],
     input,
@@ -39,4 +42,21 @@ void test('render produces a dry-run plan and a Memstore-readable Markdown corpu
   )
   assert.match(rendered, /^# Remember this decision/mu)
   assert.match(rendered, /^## user - message/mu)
+  const frontmatter = rendered.split('\n---\n')[0]
+  assert.ok(frontmatter)
+  assert.deepEqual(
+    JSON.parse(frontmatter.replace(/^---\nhosts: /u, '')),
+    record.hosts,
+  )
+  assert.equal(rendered.includes('\ninjected: true\n'), false)
+
+  const legacy = createConversationRecord()
+  await writeConversationExport([legacy], input)
+  await renderConversationArchive({ input, outputDirectory, apply: true })
+  const withoutHosts = await fs.readFile(
+    join(outputDirectory, `${legacy.id}.md`),
+    'utf8',
+  )
+  assert.equal(withoutHosts.startsWith('# '), true)
+  assert.equal(withoutHosts.includes('\nhosts:'), false)
 })
