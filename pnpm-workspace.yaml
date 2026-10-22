@@ -5,6 +5,7 @@ blockExoticSubdeps: true
 autoInstallPeers: false
 
 overrides:
+  'handlebars@<4.7.10': ^4.7.10 # GHSA-8r5x-fm3f-whwj and GHSA-p8wg-vrv2-v86f
   'brace-expansion@<2.0.0': ^1.1.18 # GHSA-mh99-v99m-4gvg and GHSA-rgw5-rvv9-x895
   'brace-expansion@>=4.0.0 <5.0.9': ^5.0.9 # GHSA-mh99-v99m-4gvg and GHSA-rgw5-rvv9-x895
 
