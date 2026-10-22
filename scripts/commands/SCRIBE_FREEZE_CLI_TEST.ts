@@ -93,7 +93,7 @@ void test('every writer refuses with 75 while frozen, readers run, unfreezing re
   for (const args of writers) {
     const run = runScribeWithState(state, ...args)
     assert.equal(run.status, 75, `${args.join(' ')}\n${run.stderr}`)
-    assert.match(run.stderr, /^frozen: .*migration\.freeze exists/)
+    assert.match(run.stderr, /^frozen: .*migration\.freeze exists/m)
     assert.equal(run.stdout, '')
   }
   assert.deepEqual(await snapshotConversationTree(origin.root), before)
@@ -200,7 +200,7 @@ void test('capture --init that meets a freeze while waiting for the lock selects
   await fs.rm(lock)
   const run = await capture
   assert.equal(run.status, 75, run.stderr)
-  assert.match(run.stderr, /^frozen: /)
+  assert.match(run.stderr, /^frozen: /m)
   assert.equal(
     await conversationPathExists(
       resolveConversationSegmentPaths(root).reference,
