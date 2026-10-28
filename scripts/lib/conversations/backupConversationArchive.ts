@@ -1,5 +1,6 @@
-import { constants, promises as fs } from 'node:fs'
+import { promises as fs } from 'node:fs'
 import { basename, dirname, join } from 'node:path'
+import { cloneArchiveFile } from './cloneArchiveFile'
 
 export const backupConversationArchive = async (archive: string, now: Date) => {
   try {
@@ -11,7 +12,7 @@ export const backupConversationArchive = async (archive: string, now: Date) => {
 
   const stamp = now.toISOString().replaceAll(/[:.]/gu, '-')
   const backup = join(dirname(archive), `${basename(archive)}.backup-${stamp}`)
-  await fs.copyFile(archive, backup, constants.COPYFILE_EXCL)
+  await cloneArchiveFile(archive, backup)
   await fs.chmod(backup, 0o600)
   return backup
 }
