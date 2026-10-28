@@ -34,3 +34,21 @@ void test('a clone refuses to overwrite an existing target', async (context) => 
   await assert.rejects(cloneArchiveFile(source, target))
   assert.equal(await fs.readFile(target, 'utf8'), 'kept\n')
 })
+
+void test('a clone refuses a directory or a dangling symlink at the target', async (context) => {
+  const root = await createConversationScratchDirectory(
+    context,
+    'conversation-archive-clone-',
+  )
+  const source = join(root, 'archive.jsonl')
+  await fs.writeFile(source, 'source\n')
+  const directory = join(root, 'directory')
+  await fs.mkdir(directory)
+  const dangling = join(root, 'dangling')
+  await fs.symlink(join(root, 'missing'), dangling)
+
+  await assert.rejects(cloneArchiveFile(source, directory), { code: 'EEXIST' })
+  await assert.rejects(cloneArchiveFile(source, dangling), { code: 'EEXIST' })
+  assert.deepEqual(await fs.readdir(directory), [])
+  await assert.rejects(fs.access(join(root, 'missing')))
+})
