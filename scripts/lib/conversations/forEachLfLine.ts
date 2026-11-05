@@ -11,7 +11,12 @@ export const forEachLfLine = async (
   consumeChunk?: (chunk: string) => void,
 ) => {
   const handle = await fs.open(path, constants.O_RDONLY | constants.O_NOFOLLOW)
-  let carry = ''
+  // The unterminated tail is kept as the pieces it arrived in and joined once,
+  // when its newline arrives: concatenating it with every 64 KiB chunk and
+  // splitting the whole again made a line of n bytes cost O(n^2), which on the
+  // 9.6 GB archive kept an import busy for over an hour after its last read.
+  let carry: string[] = []
+  let carryBytes = 0
   try {
     for await (const chunk of handle.createReadStream({
       autoClose: false,
@@ -21,14 +26,27 @@ export const forEachLfLine = async (
       if (typeof chunk !== 'string')
         throw new Error('JSONL stream did not decode as UTF-8 text')
       consumeChunk?.(chunk)
-      const lines = `${carry}${chunk}`.split('\n')
-      carry = lines.pop() ?? ''
-      for (const line of lines) consume(line, true)
-      if (Buffer.byteLength(carry) > MAX_CONVERSATION_FILE_BYTES) {
+      let start = 0
+      let end = chunk.indexOf('\n')
+      while (end !== -1) {
+        const tail = chunk.slice(start, end)
+        const line = carry.length === 0 ? tail : carry.join('') + tail
+        carry = []
+        carryBytes = 0
+        consume(line, true)
+        start = end + 1
+        end = chunk.indexOf('\n', start)
+      }
+      if (start < chunk.length) {
+        const rest = chunk.slice(start)
+        carry.push(rest)
+        carryBytes += Buffer.byteLength(rest)
+      }
+      if (carryBytes > MAX_CONVERSATION_FILE_BYTES) {
         throw new Error('JSONL line exceeds the 64 MiB safe size limit')
       }
     }
-    if (carry !== '') consume(carry, false)
+    if (carry.length > 0) consume(carry.join(''), false)
   } finally {
     await handle.close()
   }
