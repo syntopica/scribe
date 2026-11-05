@@ -1,6 +1,7 @@
 import { promises as fs } from 'node:fs'
 import { ConversationArchiveState } from './ConversationArchiveState'
 import { CONVERSATION_ARCHIVE_STATE_SCHEMA_VERSION } from './constants/CONVERSATION_ARCHIVE_STATE_SCHEMA_VERSION'
+import { isConversationStateIntegrityCheckDue } from './isConversationStateIntegrityCheckDue'
 import { listConversationArchiveSegments } from './listConversationArchiveSegments'
 import { materializeConversations } from './materializeConversations'
 import { readConversationArchiveSegment } from './readConversationArchiveSegment'
@@ -10,8 +11,9 @@ import type { ConversationArchiveGeneration } from './types/ConversationArchiveG
  * Bring the disposable state up to the segments on disk, or start it over.
  *
  * Three conditions mean the file is worthless rather than stale: it fails its
- * own integrity check, it was written by a different state schema, or it
- * describes a different generation. In each case it is deleted and rebuilt
+ * own integrity check (run at most daily, see
+ * CONVERSATION_STATE_INTEGRITY_CHECK_INTERVAL_MS), it was written by a
+ * different state schema, or it describes a different generation. In each case it is deleted and rebuilt
  * from the segments, because the segments are the archive and this is only a
  * cache of what they already say.
  *
@@ -28,8 +30,13 @@ export const openConversationArchiveState = async (options: {
 }) => {
   const open = () => new ConversationArchiveState(options.statePath)
   let state = open()
+  const now = Date.now()
+  const checkDue = isConversationStateIntegrityCheckDue(
+    state.meta('integrityCheckedAt'),
+    now,
+  )
   const stale =
-    !state.integrityCheck() ||
+    (checkDue && !state.integrityCheck()) ||
     state.meta('schemaVersion') !==
       String(CONVERSATION_ARCHIVE_STATE_SCHEMA_VERSION) ||
     (state.meta('generationId') !== undefined &&
@@ -51,6 +58,10 @@ export const openConversationArchiveState = async (options: {
     String(CONVERSATION_ARCHIVE_STATE_SCHEMA_VERSION),
   )
   state.setMeta('generationId', options.generation.generationId)
+  // A file that just passed the check, or was just started over, is sound.
+  if (checkDue || stale) {
+    state.setMeta('integrityCheckedAt', new Date(now).toISOString())
+  }
 
   const present = await listConversationArchiveSegments(
     options.segmentsDirectory,
