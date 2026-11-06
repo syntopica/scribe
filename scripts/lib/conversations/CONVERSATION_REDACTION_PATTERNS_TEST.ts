@@ -56,6 +56,14 @@ void test('an environment assignment keeps its name and opening quote', () => {
   )
 })
 
+void test('an assignment value ends at an escaped newline', () => {
+  const value = ALNUM.slice(0, 32)
+  assert.equal(
+    redactSensitiveText(`KEY=${value}\\nSTART=$(date)`).text,
+    'KEY=[REDACTED:secret]\\nSTART=$(date)',
+  )
+})
+
 void test('an inline redaction keeps the label and the quotes', () => {
   const value = ALNUM.slice(0, 32)
   assert.equal(
@@ -71,6 +79,10 @@ for (const line of [
   'Supabase Public Key: ' + 'sb_publishable_' + 'abc123def456ghi789',
   'STOP_ALL_KEY = "Escape"',
   'Clave de liquidación: ' + 'A0123456' + '78901234',
+  'SECRETS=' + '/Users/someone/p/project-123/',
+  'KEY=' + '$(date -j -f %Y)',
+  'BETTER_AUTH_SECRET=' + '<run openssl1>',
+  'SECRET_KEY=' + '{env.keys[0]}',
   'clave_liquidacion: ' + 'A0123456' + '78901234',
   'export SCANNED_TOKEN_PATTERN=' + 'gh[ops]_[a-z0-9]{36}',
   'OAUTH_TOKEN_URI=' + 'https://oauth2.example.com/token2',
