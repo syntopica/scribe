@@ -7,11 +7,13 @@ import { CREDENTIAL_LABEL_SUFFIXES } from './constants/CREDENTIAL_LABEL_SUFFIXES
 import { ENVIRONMENT_ASSIGNMENT_PATTERN } from './constants/ENVIRONMENT_ASSIGNMENT_PATTERN'
 import { ESCAPED_PRIVATE_KEY_PATTERN } from './constants/ESCAPED_PRIVATE_KEY_PATTERN'
 import { INLINE_SECRET_PATTERN } from './constants/INLINE_SECRET_PATTERN'
+import { KEY_MATERIAL_RUN_MIN_LENGTH } from './constants/KEY_MATERIAL_RUN_MIN_LENGTH'
 import { KNOWN_SECRET_MIN_LENGTH } from './constants/KNOWN_SECRET_MIN_LENGTH'
 import { NON_SECRET_VARIABLE_WORDS } from './constants/NON_SECRET_VARIABLE_WORDS'
 import { PEM_BODY_PREFIX_MAX_LENGTH } from './constants/PEM_BODY_PREFIX_MAX_LENGTH'
 import { PRIVATE_KEY_BEGIN_PATTERN } from './constants/PRIVATE_KEY_BEGIN_PATTERN'
 import { PRIVATE_KEY_END_PATTERN } from './constants/PRIVATE_KEY_END_PATTERN'
+import { PRIVATE_KEY_MARKER } from './constants/PRIVATE_KEY_MARKER'
 import { PUBLIC_KEY_QUALIFIERS } from './constants/PUBLIC_KEY_QUALIFIERS'
 import { SECRET_VARIABLE_WORD_PATTERN } from './constants/SECRET_VARIABLE_WORD_PATTERN'
 import { SPANISH_TOKEN_LINKS } from './constants/SPANISH_TOKEN_LINKS'
@@ -39,6 +41,7 @@ import { isSecretVariableName } from './isSecretVariableName'
 import { isTaxReferenceLabel } from './isTaxReferenceLabel'
 import { isTaxReferenceValue } from './isTaxReferenceValue'
 import { isVariableNameValue } from './isVariableNameValue'
+import { leadingKeyMaterialLength } from './leadingKeyMaterialLength'
 import { listConversationSecretTokens } from './listConversationSecretTokens'
 import { listRecordRedactedSpans } from './listRecordRedactedSpans'
 import { listRedactedSpans } from './listRedactedSpans'
@@ -50,6 +53,7 @@ import { redactConversationText } from './redactConversationText'
 import { redactEnvironmentSecretAssignments } from './redactEnvironmentSecretAssignments'
 import { redactEscapedPrivateKeyLine } from './redactEscapedPrivateKeyLine'
 import { redactInlinePrivateKeys } from './redactInlinePrivateKeys'
+import { redactKeyMaterialRuns } from './redactKeyMaterialRuns'
 import { redactLabelledInlineSecrets } from './redactLabelledInlineSecrets'
 import { redactPrivateKeyBlocks } from './redactPrivateKeyBlocks'
 import { redactSensitiveText } from './redactSensitiveText'
@@ -78,6 +82,8 @@ export const conversationRedactorSha256 = () =>
       isTaxReferenceLabel,
       redactPrivateKeyBlocks,
       redactInlinePrivateKeys,
+      redactKeyMaterialRuns,
+      leadingKeyMaterialLength,
       holdsEscapedPrivateKey,
       isPrivateKeyMarkerLine,
       redactEscapedPrivateKeyLine,
@@ -105,6 +111,8 @@ export const conversationRedactorSha256 = () =>
       looksLikePemBodyLine,
       PRIVATE_KEY_BEGIN_PATTERN,
       PRIVATE_KEY_END_PATTERN,
+      KEY_MATERIAL_RUN_MIN_LENGTH,
+      PRIVATE_KEY_MARKER,
       addKnownSecretValues,
       listRecordRedactedSpans,
       listRedactedSpans,

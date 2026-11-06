@@ -276,3 +276,37 @@ void test('a placeholder BEGIN marker takes no prose up to a later END marker', 
   ].join('\n')
   assert.equal(redactSensitiveText(text).text, text)
 })
+
+void test('a truncated inline key goes and the text after its END stays', () => {
+  const body = 'b3B' + ALNUM.slice(0, 80)
+  const text =
+    '[[-----BEGIN OPENSSH ' +
+    'PRIVATE KEY-----' +
+    body +
+    '...-----END OPENSSH PRIVATE KEY-----]] notes.md'
+  const redacted = redactSensitiveText(text).text
+  assert.ok(!redacted.includes(body), redacted)
+  assert.ok(redacted.endsWith('-----]] notes.md'), redacted)
+})
+
+void test('an inline key with no END marker loses its body', () => {
+  const body = 'b3B' + ALNUM.slice(0, 80)
+  const text = 'key -----BEGIN OPENSSH ' + 'PRIVATE KEY-----' + body + ' (cut)'
+  const redacted = redactSensitiveText(text).text
+  assert.ok(!redacted.includes(body), redacted)
+  assert.ok(redacted.endsWith(' (cut)'), redacted)
+})
+
+void test('a key written as a JSON list of lines loses every line', () => {
+  const line = 'MII' + ALNUM.slice(0, 61)
+  const text =
+    '["-----BEGIN RSA ' +
+    'PRIVATE KEY-----", "' +
+    line +
+    '", "' +
+    line.split('').reverse().join('') +
+    '", "-----END RSA PRIVATE KEY-----"]'
+  const redacted = redactSensitiveText(text).text
+  assert.ok(!redacted.includes(line), redacted)
+  assert.ok(!redacted.includes(line.split('').reverse().join('')), redacted)
+})
