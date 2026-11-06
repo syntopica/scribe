@@ -1,3 +1,4 @@
+import { closesPrivateKeyOnSameLine } from './closesPrivateKeyOnSameLine'
 import type { RedactedText } from './types/RedactedText'
 
 export const redactPrivateKeyBlocks = (input: string): RedactedText => {
@@ -7,7 +8,13 @@ export const redactPrivateKeyBlocks = (input: string): RedactedText => {
   let redactions = 0
 
   for (const line of lines) {
-    if (line.startsWith('-----BEGIN ') && line.includes('PRIVATE KEY-----')) {
+    const opens =
+      line.startsWith('-----BEGIN ') && line.includes('PRIVATE KEY-----')
+    if (opens && !insidePrivateKey && closesPrivateKeyOnSameLine(line)) {
+      output.push(line)
+      continue
+    }
+    if (opens) {
       if (!insidePrivateKey) {
         output.push('[REDACTED:private-key]')
         redactions++

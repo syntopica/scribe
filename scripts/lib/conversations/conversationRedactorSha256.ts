@@ -1,4 +1,5 @@
 import { applyRedactionPattern } from './applyRedactionPattern'
+import { closesPrivateKeyOnSameLine } from './closesPrivateKeyOnSameLine'
 import { CREDENTIAL_LABEL_MAX_WORDS } from './constants/CREDENTIAL_LABEL_MAX_WORDS'
 import { CREDENTIAL_LABEL_PREFIXES } from './constants/CREDENTIAL_LABEL_PREFIXES'
 import { CREDENTIAL_LABEL_SUFFIXES } from './constants/CREDENTIAL_LABEL_SUFFIXES'
@@ -46,6 +47,7 @@ export const conversationRedactorSha256 = () =>
       isSecretVariableName,
       isTaxReferenceLabel,
       redactPrivateKeyBlocks,
+      closesPrivateKeyOnSameLine,
       redactSensitiveText,
       redactConversationRecord,
       VENDOR_TOKEN_PATTERNS,

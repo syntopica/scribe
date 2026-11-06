@@ -50,6 +50,23 @@ for (const line of [
   })
 }
 
+void test('the lines after a one-line JSON-escaped private key stay', () => {
+  const body = 'MII' + ALNUM.slice(0, 60)
+  const text =
+    '-----BEGIN ' +
+    'PRIVATE KEY-----\\n' +
+    body +
+    '\\n-----END PRIVATE KEY-----\\n", "client_email": "bot@example.com"\n' +
+    'Run pnpm install from package.json next.'
+  const redacted = redactSensitiveText(text).text
+  assert.ok(!redacted.includes(body), redacted)
+  assert.ok(redacted.includes('"client_email": "bot@example.com"'), redacted)
+  assert.ok(
+    redacted.endsWith('Run pnpm install from package.json next.'),
+    redacted,
+  )
+})
+
 void test('an environment assignment keeps its name and opening quote', () => {
   const value = ALNUM.slice(0, 32)
   assert.equal(
