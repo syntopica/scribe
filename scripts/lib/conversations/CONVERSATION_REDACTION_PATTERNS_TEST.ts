@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { createKnownSecretRedactor } from './createKnownSecretRedactor'
 import { REDACTION_SENTINEL_ALNUM as ALNUM } from './fixtures/REDACTION_SENTINEL_ALNUM'
 import { VENDOR_TOKEN_SENTINELS } from './fixtures/VENDOR_TOKEN_SENTINELS'
 import { createConversationFragment } from './fixtures/createConversationFragment'
@@ -156,4 +157,29 @@ void test('re-redacting a record leaves the events without secrets byte for byte
   assert.equal(redacted.events[0]?.text, 'the key is [REDACTED:token]')
   assert.equal(redacted.events[1], padded.events[1])
   assert.equal(redacted.provenance.redactions, record.provenance.redactions + 1)
+})
+
+void test('a PEM BEGIN marker quoted in prose takes no text after it', () => {
+  const text = [
+    'Paste the -----BEGIN',
+    '-----BEGIN OPENSSH PRIVATE KEY----- ... and the END marker',
+    'then run pnpm install from package.json.',
+    'Done.',
+  ].join('\n')
+  const redacted = redactSensitiveText(text).text
+  assert.ok(redacted.includes('then run pnpm install from package.json.'))
+  assert.ok(redacted.endsWith('Done.'))
+})
+
+void test('a known value is replaced only as a token of its own', () => {
+  const redact = createKnownSecretRedactor(['k3yV4lue' + 'ZZ99'])
+  const value = 'k3yV4lue' + 'ZZ99'
+  assert.deepEqual(redact(`use ${value} here`), {
+    text: 'use [REDACTED:secret] here',
+    redactions: 1,
+  })
+  assert.deepEqual(redact(`hash a${value}b stays`), {
+    text: `hash a${value}b stays`,
+    redactions: 0,
+  })
 })

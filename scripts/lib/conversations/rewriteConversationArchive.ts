@@ -2,8 +2,10 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { backupConversationArchive } from './backupConversationArchive'
+import { collectArchiveKnownSecretValues } from './collectArchiveKnownSecretValues'
 import { ConversationArchiveChangedError } from './ConversationArchiveChangedError'
 import { ConversationCaptureStore } from './ConversationCaptureStore'
+import { createKnownSecretRedactor } from './createKnownSecretRedactor'
 import { pruneConversationArchiveBackups } from './pruneConversationArchiveBackups'
 import { readArchiveRevision } from './readArchiveRevision'
 import { removeAbandonedArchiveTemporaries } from './removeAbandonedArchiveTemporaries'
@@ -42,10 +44,12 @@ export const rewriteConversationArchive = async (options: {
   homes: readonly string[]
   apply: boolean
   now?: Date
-  /** Also run the current secret redactor over every record. */
+  /**
+   * Also run the current secret redactor over every record, with the bare
+   * copies of every value it removes anywhere in the archive.
+   */
   redactSecrets?: boolean
 }): Promise<ConversationRewriteResult> => {
-  const redactSecrets = options.redactSecrets ?? false
   const homes = [...new Set(options.homes)].toSorted((left, right) =>
     left.localeCompare(right),
   )
@@ -81,6 +85,18 @@ export const rewriteConversationArchive = async (options: {
     return finish(count(), [
       `home prefixes must be absolute paths without a trailing slash: ${malformed.join(', ')}`,
     ])
+
+  const known =
+    options.redactSecrets === true
+      ? await collectArchiveKnownSecretValues(options.archive)
+      : undefined
+  if (known !== undefined && known.errors.length > 0)
+    return finish(
+      count(),
+      known.errors.map((error) => `archive: ${error}`),
+    )
+  const redactSecrets =
+    known === undefined ? false : createKnownSecretRedactor(known.values)
 
   const mergedFrom = await readArchiveRevision(options.archive)
   const planned = count()

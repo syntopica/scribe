@@ -216,7 +216,7 @@ void test('a secret in a field the redactor cannot rewrite fails verify and is r
   )
 })
 
-void test('a bare copy of a quoted secret in another fragment fails verify', async (context) => {
+void test('a bare copy of a quoted secret in another fragment is redacted with it', async (context) => {
   const quotedBase = createConversationFragment({
     id: 'q',
     events: 2,
@@ -248,11 +248,41 @@ void test('a bare copy of a quoted secret in another fragment fails verify', asy
     [quoted, bare],
     ['q'],
   )
-  assert.deepEqual(plan.conversations[0]?.removedFragmentSha256, [
-    hashConversationFragment(quoted),
-  ])
+  assert.deepEqual(
+    plan.conversations[0]?.removedFragmentSha256.toSorted((left, right) =>
+      left.localeCompare(right),
+    ),
+    [hashConversationFragment(quoted), hashConversationFragment(bare)].toSorted(
+      (left, right) => left.localeCompare(right),
+    ),
+  )
+  assert.equal(verified.ok, true, JSON.stringify(verified))
+})
+
+void test('a bare copy in a conversation the plan does not name fails verify', async (context) => {
+  const quotedBase = createConversationFragment({ id: 'q', events: 1 })
+  const quoted: ConversationRecord = {
+    ...quotedBase,
+    events: quotedBase.events.map((event) => ({
+      ...event,
+      text: 'login password="fixture-secret-123" ok',
+    })),
+  }
+  const otherBase = createConversationFragment({ id: 'other', events: 1 })
+  const other: ConversationRecord = {
+    ...otherBase,
+    events: otherBase.events.map((event) => ({
+      ...event,
+      text: 'the value was fixture-secret-123',
+    })),
+  }
+  const { verified } = await redactFragmentsInArchive(
+    context,
+    [quoted, other],
+    ['q'],
+  )
   assert.equal(verified.ok, false)
-  assert.deepEqual(verified.secretsPresent, [hashConversationFragment(bare)])
+  assert.deepEqual(verified.secretsPresent, [hashConversationFragment(other)])
 })
 
 void test('a secret only in the workspace is planned and removed', async (context) => {
@@ -318,7 +348,7 @@ void test('a dated path segment of a removed span is not a needle', () => {
   )
 })
 
-void test('the bare password of removed URL credentials fails verify', async (context) => {
+void test('the bare password of removed URL credentials is redacted with them', async (context) => {
   const withUrl = createConversationFragment({
     id: 'r',
     events: 1,
@@ -347,14 +377,18 @@ void test('the bare password of removed URL credentials fails verify', async (co
     [url, copy],
     ['r'],
   )
-  assert.deepEqual(plan.conversations[0]?.removedFragmentSha256, [
-    hashConversationFragment(url),
-  ])
-  assert.equal(verified.ok, false)
-  assert.deepEqual(verified.secretsPresent, [hashConversationFragment(copy)])
+  assert.deepEqual(
+    plan.conversations[0]?.removedFragmentSha256.toSorted((left, right) =>
+      left.localeCompare(right),
+    ),
+    [hashConversationFragment(url), hashConversationFragment(copy)].toSorted(
+      (left, right) => left.localeCompare(right),
+    ),
+  )
+  assert.equal(verified.ok, true, JSON.stringify(verified))
 })
 
-void test('one surviving line of a removed key fails verify, prose about keys does not', async (context) => {
+void test('a surviving line of a removed key is redacted, prose about keys is not', async (context) => {
   const bodyLine = 'MIIEowIBAAKCAQEA7synthetic0key1body2line3'
   const withKey = createConversationFragment({
     id: 'k',
@@ -401,8 +435,15 @@ void test('one surviving line of a removed key fails verify, prose about keys do
     [key, line, prose],
     ['k'],
   )
-  assert.equal(leaked.verified.ok, false)
-  assert.deepEqual(leaked.verified.secretsPresent, [
-    hashConversationFragment(line),
-  ])
+  assert.equal(leaked.verified.ok, true, JSON.stringify(leaked.verified))
+  assert.ok(
+    leaked.plan.conversations
+      .flatMap((entry) => entry.removedFragmentSha256)
+      .includes(hashConversationFragment(line)),
+  )
+  assert.ok(
+    !leaked.plan.conversations
+      .flatMap((entry) => entry.removedFragmentSha256)
+      .includes(hashConversationFragment(prose)),
+  )
 })

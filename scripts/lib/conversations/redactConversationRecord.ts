@@ -1,5 +1,6 @@
-import { redactSensitiveText } from './redactSensitiveText'
+import { redactConversationText } from './redactConversationText'
 import type { ConversationRecord } from './types/ConversationRecord'
+import type { KnownSecretRedactor } from './types/KnownSecretRedactor'
 
 /**
  * One archived record as the current redactor would have stored it.
@@ -11,18 +12,23 @@ import type { ConversationRecord } from './types/ConversationRecord'
  * for the reason `rewriteConversationRecord` gives: the index they were hashed
  * with is not stored. A record the redactor finds nothing in comes back as the
  * same object, so its fragment hash is unchanged.
+ *
+ * A redaction of the archive passes `redactKnown`, built from every value the
+ * pattern redactor removes from the planned fragments, so a credential removed
+ * where it was labelled is also removed where it was pasted bare.
  */
 export const redactConversationRecord = (
   record: ConversationRecord,
+  redactKnown?: KnownSecretRedactor,
 ): ConversationRecord => {
-  const title = redactSensitiveText(record.title)
+  const title = redactConversationText(record.title, redactKnown)
   const workspace =
     record.workspace === undefined
       ? undefined
-      : redactSensitiveText(record.workspace)
+      : redactConversationText(record.workspace, redactKnown)
   const events = record.events.map((event) => ({
     event,
-    redacted: redactSensitiveText(event.text),
+    redacted: redactConversationText(event.text, redactKnown),
   }))
   const redactions = events.reduce(
     (total, { redacted }) => total + redacted.redactions,

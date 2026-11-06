@@ -1,6 +1,8 @@
 import { NEEDLE_HASH_BASE } from './constants/NEEDLE_HASH_BASE'
 import { NEEDLE_PREFIX_LENGTH } from './constants/NEEDLE_PREFIX_LENGTH'
+import { containsBoundedOccurrence } from './containsBoundedOccurrence'
 import { hashTextWindow } from './hashTextWindow'
+import { isBoundedOccurrence } from './isBoundedOccurrence'
 
 /**
  * A test for whether a text contains any of `needles`, in one pass over it.
@@ -10,6 +12,10 @@ import { hashTextWindow } from './hashTextWindow'
  * that scanned a 14 GB generation that way ran past an hour (2026-11-06). Here
  * a rolling hash of every window of `NEEDLE_PREFIX_LENGTH` units is looked up
  * among the needles' prefixes, and only a hit is compared exactly.
+ *
+ * A needle counts only as a token of its own (`isBoundedOccurrence`), as the
+ * known-value redactor replaces it: eight characters of a removed key inside
+ * an unrelated hash are a coincidence, and the redactor leaves them.
  */
 export const createNeedleMatcher = (needles: Iterable<string>) => {
   const width = NEEDLE_PREFIX_LENGTH
@@ -29,12 +35,19 @@ export const createNeedleMatcher = (needles: Iterable<string>) => {
     leading = Math.imul(leading, NEEDLE_HASH_BASE) >>> 0
 
   return (text: string) => {
-    if (short.some((needle) => text.includes(needle))) return true
+    if (short.some((needle) => containsBoundedOccurrence(text, needle)))
+      return true
     if (byPrefix.size === 0 || text.length < width) return false
     let hash = hashTextWindow(text, 0, width)
     for (let start = 0; ; start++) {
       const candidates = byPrefix.get(hash)
-      if (candidates?.some((needle) => text.startsWith(needle, start)))
+      if (
+        candidates?.some(
+          (needle) =>
+            text.startsWith(needle, start) &&
+            isBoundedOccurrence(text, start, needle.length),
+        )
+      )
         return true
       if (start + width >= text.length) return false
       const leaving = Math.imul(text.charCodeAt(start), leading)

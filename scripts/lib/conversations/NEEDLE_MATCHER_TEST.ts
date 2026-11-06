@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { containsBoundedOccurrence } from './containsBoundedOccurrence'
 import { createNeedleMatcher } from './createNeedleMatcher'
 
 void test('a needle is found at the start, the middle and the end of a text', () => {
@@ -24,7 +25,7 @@ void test('short needles and non-ASCII text are found too', () => {
   assert.equal(contains('nada aquí'), false)
 })
 
-void test('it agrees with a plain search on random texts', () => {
+void test('it agrees with a bounded plain search on random texts', () => {
   const alphabet = 'abcd01-'
   let seed = 7
   const random = () => {
@@ -39,7 +40,7 @@ void test('it agrees with a plain search on random texts', () => {
     const text = word(random() % 60)
     assert.equal(
       contains(text),
-      needles.some((needle) => text.includes(needle)),
+      needles.some((needle) => containsBoundedOccurrence(text, needle)),
       text,
     )
   }

@@ -1,3 +1,4 @@
+import { addKnownSecretValues } from './addKnownSecretValues'
 import { applyRedactionPattern } from './applyRedactionPattern'
 import { closesPrivateKeyOnSameLine } from './closesPrivateKeyOnSameLine'
 import { CREDENTIAL_LABEL_MAX_WORDS } from './constants/CREDENTIAL_LABEL_MAX_WORDS'
@@ -6,24 +7,34 @@ import { CREDENTIAL_LABEL_SUFFIXES } from './constants/CREDENTIAL_LABEL_SUFFIXES
 import { ENVIRONMENT_ASSIGNMENT_PATTERN } from './constants/ENVIRONMENT_ASSIGNMENT_PATTERN'
 import { ESCAPED_PRIVATE_KEY_PATTERN } from './constants/ESCAPED_PRIVATE_KEY_PATTERN'
 import { INLINE_SECRET_PATTERN } from './constants/INLINE_SECRET_PATTERN'
+import { KNOWN_SECRET_MIN_LENGTH } from './constants/KNOWN_SECRET_MIN_LENGTH'
 import { NON_SECRET_VARIABLE_WORDS } from './constants/NON_SECRET_VARIABLE_WORDS'
 import { PUBLIC_KEY_QUALIFIERS } from './constants/PUBLIC_KEY_QUALIFIERS'
 import { SECRET_VARIABLE_WORD_PATTERN } from './constants/SECRET_VARIABLE_WORD_PATTERN'
 import { SPANISH_TOKEN_LINKS } from './constants/SPANISH_TOKEN_LINKS'
 import { VENDOR_TOKEN_PATTERNS } from './constants/VENDOR_TOKEN_PATTERNS'
+import { createKnownSecretRedactor } from './createKnownSecretRedactor'
 import { hashText } from './hashText'
 import { hasTokenShape } from './hasTokenShape'
 import { holdsEscapedPrivateKey } from './holdsEscapedPrivateKey'
+import { isAlphanumericCharacter } from './isAlphanumericCharacter'
+import { isBoundedOccurrence } from './isBoundedOccurrence'
 import { isCodeExpressionValue } from './isCodeExpressionValue'
 import { isFilePathValue } from './isFilePathValue'
 import { isInlineSecretLabel } from './isInlineSecretLabel'
+import { isKnownSecretCandidate } from './isKnownSecretCandidate'
+import { isPemBodyLine } from './isPemBodyLine'
 import { isPrivateKeyMarkerLine } from './isPrivateKeyMarkerLine'
 import { isSchemeRelativeUrl } from './isSchemeRelativeUrl'
 import { isSecretTableLabel } from './isSecretTableLabel'
 import { isSecretVariableName } from './isSecretVariableName'
 import { isTaxReferenceLabel } from './isTaxReferenceLabel'
+import { listConversationSecretTokens } from './listConversationSecretTokens'
+import { listRecordRedactedSpans } from './listRecordRedactedSpans'
+import { listRedactedSpans } from './listRedactedSpans'
 import { redactAssignedSecrets } from './redactAssignedSecrets'
 import { redactConversationRecord } from './redactConversationRecord'
+import { redactConversationText } from './redactConversationText'
 import { redactEnvironmentSecretAssignments } from './redactEnvironmentSecretAssignments'
 import { redactEscapedPrivateKeyLine } from './redactEscapedPrivateKeyLine'
 import { redactLabelledInlineSecrets } from './redactLabelledInlineSecrets'
@@ -62,6 +73,17 @@ export const conversationRedactorSha256 = () =>
       isSchemeRelativeUrl,
       redactSensitiveText,
       redactConversationRecord,
+      createKnownSecretRedactor,
+      isKnownSecretCandidate,
+      redactConversationText,
+      isBoundedOccurrence,
+      isAlphanumericCharacter,
+      isPemBodyLine,
+      addKnownSecretValues,
+      listRecordRedactedSpans,
+      listRedactedSpans,
+      listConversationSecretTokens,
+      KNOWN_SECRET_MIN_LENGTH,
       VENDOR_TOKEN_PATTERNS,
       INLINE_SECRET_PATTERN,
       ENVIRONMENT_ASSIGNMENT_PATTERN,

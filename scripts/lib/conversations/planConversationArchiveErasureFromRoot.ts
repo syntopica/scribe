@@ -1,8 +1,11 @@
+import { collectKnownSecretValues } from './collectKnownSecretValues'
+import { createKnownSecretRedactor } from './createKnownSecretRedactor'
 import { listConversationArchiveSegments } from './listConversationArchiveSegments'
 import { noteConversationRedactionTarget } from './noteConversationRedactionTarget'
 import { planConversationArchiveErasure } from './planConversationArchiveErasure'
 import { readConversationArchiveGeneration } from './readConversationArchiveGeneration'
 import { readConversationArchiveSegment } from './readConversationArchiveSegment'
+import type { ConversationFragmentEntry } from './types/ConversationFragmentEntry'
 import type { ConversationFragmentReference } from './types/ConversationFragmentReference'
 import type { PlanConversationArchiveErasureFromRootOptions } from './types/PlanConversationArchiveErasureFromRootOptions'
 
@@ -20,6 +23,9 @@ import type { PlanConversationArchiveErasureFromRootOptions } from './types/Plan
  * every conversation a plan names, so naming a clean one costs a re-synthesis
  * for nothing. Requested conversations with secret text in a field the
  * redactor cannot rewrite are reported into `unredactableConversationIds`.
+ * A first pass collects every value the pattern redactor removes from the
+ * requested fragments, and a fragment holding a bare copy of one is planned
+ * too (`collectKnownSecretValues`).
  */
 export const planConversationArchiveErasureFromRoot = async (
   options: PlanConversationArchiveErasureFromRootOptions,
@@ -37,6 +43,19 @@ export const planConversationArchiveErasureFromRoot = async (
       ? {}
       : { unredactableConversationIds: options.unredactableConversationIds }),
   }
+  const requested = (entry: ConversationFragmentEntry) =>
+    requestedConversations.has(entry.conversationId) ||
+    requestedFragments.has(entry.fragmentSha256)
+  const redactKnown = createKnownSecretRedactor(
+    redacting
+      ? await collectKnownSecretValues({
+          segmentsDirectory: segments,
+          segmentSha256: present,
+          generation,
+          includes: requested,
+        })
+      : [],
+  )
   const entries: ConversationFragmentReference[] = []
   for (const sha256 of present) {
     const segment = await readConversationArchiveSegment({
@@ -54,11 +73,8 @@ export const planConversationArchiveErasureFromRoot = async (
       )
       if (conversationRequested)
         options.matchedConversationIds?.add(entry.conversationId)
-      if (
-        redacting &&
-        (conversationRequested || requestedFragments.has(entry.fragmentSha256))
-      )
-        noteConversationRedactionTarget(entry, targets)
+      if (redacting && requested(entry))
+        noteConversationRedactionTarget(entry, targets, redactKnown)
     }
   }
   return planConversationArchiveErasure({

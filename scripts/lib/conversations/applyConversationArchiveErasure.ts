@@ -1,4 +1,6 @@
+import { collectKnownSecretValues } from './collectKnownSecretValues'
 import { conversationRedactorSha256 } from './conversationRedactorSha256'
+import { createKnownSecretRedactor } from './createKnownSecretRedactor'
 import { hashConversationSegmentSet } from './hashConversationSegmentSet'
 import { listConversationArchiveSegments } from './listConversationArchiveSegments'
 import { readConversationArchiveGeneration } from './readConversationArchiveGeneration'
@@ -6,6 +8,7 @@ import { redactConversationRecord } from './redactConversationRecord'
 import { sealConversationRecordsAsGeneration } from './sealConversationRecordsAsGeneration'
 import { streamConversationErasureSurvivors } from './streamConversationErasureSurvivors'
 import type { ApplyConversationArchiveErasureOptions } from './types/ApplyConversationArchiveErasureOptions'
+import type { ConversationRecord } from './types/ConversationRecord'
 
 /**
  * Write the generation a reviewed erasure plan describes, and select nothing.
@@ -61,6 +64,19 @@ export const applyConversationArchiveErasure = async (
   const planned = new Set(
     options.plan.conversations.flatMap((entry) => entry.removedFragmentSha256),
   )
+  // The values the plan's redactor removes from the planned fragments, which
+  // the plan's generation and redactor fingerprint pin: the set the plan was
+  // computed with.
+  const redactKnown = createKnownSecretRedactor(
+    redacting
+      ? await collectKnownSecretValues({
+          segmentsDirectory: segments,
+          segmentSha256: present,
+          generation,
+          includes: (entry) => planned.has(entry.fragmentSha256),
+        })
+      : [],
+  )
   const removed = new Set<string>()
   const kept = new Set<string>()
   const replaced = new Map<string, string>()
@@ -73,7 +89,13 @@ export const applyConversationArchiveErasure = async (
       removing: planned,
       kept,
       removed,
-      ...(redacting ? { replace: redactConversationRecord, replaced } : {}),
+      ...(redacting
+        ? {
+            replace: (record: ConversationRecord) =>
+              redactConversationRecord(record, redactKnown),
+            replaced,
+          }
+        : {}),
     }),
     createdAt: options.createdAt,
     buckets: options.buckets ?? 32,

@@ -2,6 +2,7 @@ import { listUnredactableConversationFields } from './listUnredactableConversati
 import { redactConversationRecord } from './redactConversationRecord'
 import type { ConversationFragmentEntry } from './types/ConversationFragmentEntry'
 import type { ConversationRedactionTargets } from './types/ConversationRedactionTargets'
+import type { KnownSecretRedactor } from './types/KnownSecretRedactor'
 
 /**
  * Record one requested entry of a redaction: its hash when the current
@@ -11,9 +12,10 @@ import type { ConversationRedactionTargets } from './types/ConversationRedaction
 export const noteConversationRedactionTarget = (
   entry: ConversationFragmentEntry,
   targets: ConversationRedactionTargets,
+  redactKnown: KnownSecretRedactor,
 ) => {
   // The redactor returns the same object when it finds nothing to change.
-  if (redactConversationRecord(entry.record) !== entry.record)
+  if (redactConversationRecord(entry.record, redactKnown) !== entry.record)
     targets.redactable.push(entry.fragmentSha256)
   if (listUnredactableConversationFields(entry).length > 0)
     targets.unredactableConversationIds?.add(entry.conversationId)

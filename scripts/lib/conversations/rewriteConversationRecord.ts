@@ -3,6 +3,7 @@ import { redactConversationHome } from './redactConversationHome'
 import { redactConversationRecord } from './redactConversationRecord'
 import type { ConversationRecord } from './types/ConversationRecord'
 import type { ConversationRewriteChanges } from './types/ConversationRewriteChanges'
+import type { KnownSecretRedactor } from './types/KnownSecretRedactor'
 
 /**
  * The two repairs the archived records need, applied to one record, and on
@@ -26,7 +27,7 @@ export const rewriteConversationRecord = (
   record: ConversationRecord,
   homes: readonly string[],
   changes: ConversationRewriteChanges,
-  redactSecrets = false,
+  redactSecrets: false | KnownSecretRedactor = false,
 ): { record: ConversationRecord; changed: boolean } => {
   changes.records++
   if (record.schemaVersion !== 2) changes.legacyRecords++
@@ -46,7 +47,10 @@ export const rewriteConversationRecord = (
     .reduce((current, home) => redactConversationHome(current, home), record)
   // The capture redactor, run again over history: it returns the same object
   // when it finds nothing, so a clean record stays byte for byte.
-  const redacted = redactSecrets ? redactConversationRecord(homeless) : homeless
+  const redacted =
+    redactSecrets === false
+      ? homeless
+      : redactConversationRecord(homeless, redactSecrets)
   if (redacted !== homeless) changes.secretsRedacted++
   const titleChanged = redacted.title !== record.title
   const workspaceChanged = redacted.workspace !== record.workspace

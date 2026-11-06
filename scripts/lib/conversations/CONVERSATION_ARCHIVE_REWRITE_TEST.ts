@@ -250,3 +250,48 @@ void test('--redact runs the secret redactor over history and keeps everything e
     records[1],
   )
 })
+
+void test('--redact also removes a bare copy of a removed value from another record', async (context) => {
+  const root = await createConversationScratchDirectory(
+    context,
+    'conversation-rewrite-known-',
+  )
+  const archive = join(root, 'archive.jsonl')
+  const value = 'fixture-' + 'secret-123'
+  const labelled = createConversationFragment({ id: 'labelled', events: 1 })
+  const bare = createConversationFragment({ id: 'bare', events: 1 })
+  const records: ConversationRecord[] = [
+    {
+      ...labelled,
+      events: labelled.events.map((event) => ({
+        ...event,
+        text: `login password="${value}" ok`,
+      })),
+    },
+    {
+      ...bare,
+      events: bare.events.map((event) => ({
+        ...event,
+        text: `the value was ${value}`,
+      })),
+    },
+  ]
+  await writeConversationExport(records, archive)
+  const applied = await rewriteConversationArchive({
+    archive,
+    homes: [],
+    apply: true,
+    redactSecrets: true,
+    now: new Date('2026-11-06T12:00:00Z'),
+  })
+  assert.deepEqual(applied.errors, [])
+  assert.equal(applied.changes.secretsRedacted, 2)
+  const { records: rewritten } = await readConversationExport(archive)
+  assert.equal(rewritten.length, 2)
+  for (const record of rewritten)
+    assert.ok(!JSON.stringify(record).includes(value), record.id)
+  assert.equal(
+    rewritten.find((record) => record.id === 'bare')?.events[0]?.text,
+    'the value was [REDACTED:secret]',
+  )
+})

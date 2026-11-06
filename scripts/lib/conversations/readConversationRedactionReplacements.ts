@@ -1,3 +1,5 @@
+import { collectKnownSecretValues } from './collectKnownSecretValues'
+import { createKnownSecretRedactor } from './createKnownSecretRedactor'
 import { hashConversationFragment } from './hashConversationFragment'
 import { listConversationArchiveSegments } from './listConversationArchiveSegments'
 import { listRecordRedactedSpans } from './listRecordRedactedSpans'
@@ -24,10 +26,19 @@ export const readConversationRedactionReplacements = async (
       options.root,
       options.generationId,
     )
+  const present = await listConversationArchiveSegments(segments)
+  const redactKnown = createKnownSecretRedactor(
+    await collectKnownSecretValues({
+      segmentsDirectory: segments,
+      segmentSha256: present,
+      generation,
+      includes: (entry) => options.planned.has(entry.fragmentSha256),
+    }),
+  )
   const replaced = new Map<string, string>()
   const spans = new Set<string>()
   const stillRedactable = new Set<string>()
-  for (const sha256 of await listConversationArchiveSegments(segments)) {
+  for (const sha256 of present) {
     const segment = await readConversationArchiveSegment({
       segmentsDirectory: segments,
       sha256,
@@ -35,10 +46,10 @@ export const readConversationRedactionReplacements = async (
     })
     for (const entry of segment.entries) {
       if (!options.planned.has(entry.fragmentSha256)) continue
-      const replacement = redactConversationRecord(entry.record)
+      const replacement = redactConversationRecord(entry.record, redactKnown)
       const replacementSha256 = hashConversationFragment(replacement)
       replaced.set(entry.fragmentSha256, replacementSha256)
-      if (redactConversationRecord(replacement) !== replacement)
+      if (redactConversationRecord(replacement, redactKnown) !== replacement)
         stillRedactable.add(replacementSha256)
       for (const span of listRecordRedactedSpans(entry.record)) spans.add(span)
     }
