@@ -134,6 +134,11 @@ for (const line of [
   'Token count: ' + 'abcdefghij' + '0123456789',
   'export API_TOKEN=[REDACTED:secret]',
   'Result: 12 of 34 passed',
+  'const KEY = ' + 'process.argv[3]',
+  'apiKey: ' + 'process.env.STRIPE_SECRET_KEY',
+  'api_key = "' + 'CONTEXT7_API_KEY"',
+  "debts: [{ clave: '" + 'A0123456789012345' + "' }]",
+  'KEY = "' + '[HOME]/.ssh/id_ed25519"',
   'SESSION_SECRET=' + 'crypto.randomBytes(32).toString(1)',
   'Google API key https:' + '//www.example.com/a/settings/apikey2',
   "key: '" + 'exports/raw/2026-10-20/part_1/' + "manifest.json'",
@@ -209,4 +214,17 @@ void test('a quoted BEGIN marker with its key below and no END still goes', () =
   const redacted = redactSensitiveText(text).text
   assert.ok(!redacted.includes(body), redacted)
   assert.ok(redacted.startsWith("key = '[REDACTED:private-key]"), redacted)
+})
+
+void test('a truncated key takes no listing after it', () => {
+  const body = 'MII' + ALNUM.slice(0, 60)
+  const text = [
+    '-----BEGIN RSA ' + 'PRIVATE KEY-----',
+    body,
+    '[RESULT] id name tax_id',
+    '611 Example S.L. B22903793',
+  ].join('\n')
+  const redacted = redactSensitiveText(text).text
+  assert.ok(!redacted.includes(body), redacted)
+  assert.ok(redacted.endsWith('611 Example S.L. B22903793'), redacted)
 })

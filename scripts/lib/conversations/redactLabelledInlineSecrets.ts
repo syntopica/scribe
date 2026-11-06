@@ -2,6 +2,7 @@ import { INLINE_SECRET_PATTERN } from './constants/INLINE_SECRET_PATTERN'
 import { hasTokenShape } from './hasTokenShape'
 import { isFilePathValue } from './isFilePathValue'
 import { isInlineSecretLabel } from './isInlineSecretLabel'
+import { isNonSecretValue } from './isNonSecretValue'
 import { isSchemeRelativeUrl } from './isSchemeRelativeUrl'
 import type { RedactedText } from './types/RedactedText'
 
@@ -28,6 +29,7 @@ export const redactLabelledInlineSecrets = (input: string): RedactedText => {
         !hasTokenShape(value) ||
         isFilePathValue(value) ||
         isSchemeRelativeUrl(value) ||
+        isNonSecretValue(value) ||
         !isInlineSecretLabel(label)
       )
         return whole

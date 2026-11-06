@@ -1,4 +1,5 @@
 import { holdsEscapedPrivateKey } from './holdsEscapedPrivateKey'
+import { isPemBodyLine } from './isPemBodyLine'
 import { isPrivateKeyMarkerLine } from './isPrivateKeyMarkerLine'
 import { opensPrivateKeyBlock } from './opensPrivateKeyBlock'
 import { redactEscapedPrivateKeyLine } from './redactEscapedPrivateKeyLine'
@@ -9,8 +10,9 @@ import type { RedactedText } from './types/RedactedText'
  *
  * A key escaped onto one line, as JSON prints it, is replaced within its line
  * whether or not truncation kept its END marker. Otherwise a block opens where
- * `opensPrivateKeyBlock` says, the text before the marker stays, and every
- * line up to the END line goes.
+ * `opensPrivateKeyBlock` says, the text before the marker stays, and its body
+ * lines go up to the END line (`isPemBodyLine`); the first line that cannot be
+ * part of a key ends the block and stays.
  */
 export const redactPrivateKeyBlocks = (input: string): RedactedText => {
   const lines = input.split('\n')
@@ -19,10 +21,12 @@ export const redactPrivateKeyBlocks = (input: string): RedactedText => {
   let redactions = 0
 
   for (const [index, line] of lines.entries()) {
-    if (insidePrivateKey) {
-      insidePrivateKey = !isPrivateKeyMarkerLine(line, 'END')
+    if (insidePrivateKey && isPrivateKeyMarkerLine(line, 'END')) {
+      insidePrivateKey = false
       continue
     }
+    if (insidePrivateKey && isPemBodyLine(line)) continue
+    insidePrivateKey = false
     if (holdsEscapedPrivateKey(line)) {
       const redacted = redactEscapedPrivateKeyLine(line)
       output.push(redacted.text)

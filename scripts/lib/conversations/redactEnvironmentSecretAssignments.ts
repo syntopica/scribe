@@ -1,6 +1,6 @@
 import { ENVIRONMENT_ASSIGNMENT_PATTERN } from './constants/ENVIRONMENT_ASSIGNMENT_PATTERN'
 import { hasTokenShape } from './hasTokenShape'
-import { isCodeExpressionValue } from './isCodeExpressionValue'
+import { isNonSecretValue } from './isNonSecretValue'
 import { isSecretVariableName } from './isSecretVariableName'
 import type { RedactedText } from './types/RedactedText'
 
@@ -21,7 +21,7 @@ export const redactEnvironmentSecretAssignments = (
         !isSecretVariableName(name) ||
         !hasTokenShape(value) ||
         value.includes('://') ||
-        isCodeExpressionValue(value)
+        isNonSecretValue(value)
       )
         return whole
       redactions++

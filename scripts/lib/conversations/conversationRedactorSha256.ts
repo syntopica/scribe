@@ -1,5 +1,6 @@
 import { addKnownSecretValues } from './addKnownSecretValues'
 import { applyRedactionPattern } from './applyRedactionPattern'
+import { ASSIGNED_SECRET_KEYS } from './constants/ASSIGNED_SECRET_KEYS'
 import { CREDENTIAL_LABEL_MAX_WORDS } from './constants/CREDENTIAL_LABEL_MAX_WORDS'
 import { CREDENTIAL_LABEL_PREFIXES } from './constants/CREDENTIAL_LABEL_PREFIXES'
 import { CREDENTIAL_LABEL_SUFFIXES } from './constants/CREDENTIAL_LABEL_SUFFIXES'
@@ -8,6 +9,7 @@ import { ESCAPED_PRIVATE_KEY_PATTERN } from './constants/ESCAPED_PRIVATE_KEY_PAT
 import { INLINE_SECRET_PATTERN } from './constants/INLINE_SECRET_PATTERN'
 import { KNOWN_SECRET_MIN_LENGTH } from './constants/KNOWN_SECRET_MIN_LENGTH'
 import { NON_SECRET_VARIABLE_WORDS } from './constants/NON_SECRET_VARIABLE_WORDS'
+import { PEM_BODY_PREFIX_MAX_LENGTH } from './constants/PEM_BODY_PREFIX_MAX_LENGTH'
 import { PRIVATE_KEY_BEGIN_PATTERN } from './constants/PRIVATE_KEY_BEGIN_PATTERN'
 import { PUBLIC_KEY_QUALIFIERS } from './constants/PUBLIC_KEY_QUALIFIERS'
 import { SECRET_VARIABLE_WORD_PATTERN } from './constants/SECRET_VARIABLE_WORD_PATTERN'
@@ -18,16 +20,22 @@ import { hashText } from './hashText'
 import { hasTokenShape } from './hasTokenShape'
 import { holdsEscapedPrivateKey } from './holdsEscapedPrivateKey'
 import { isAlphanumericCharacter } from './isAlphanumericCharacter'
+import { isBase64Character } from './isBase64Character'
 import { isBoundedOccurrence } from './isBoundedOccurrence'
 import { isCodeExpressionValue } from './isCodeExpressionValue'
+import { isCodeReferenceValue } from './isCodeReferenceValue'
 import { isFilePathValue } from './isFilePathValue'
 import { isInlineSecretLabel } from './isInlineSecretLabel'
 import { isKnownSecretCandidate } from './isKnownSecretCandidate'
+import { isNonSecretValue } from './isNonSecretValue'
+import { isPemBodyLine } from './isPemBodyLine'
 import { isPrivateKeyMarkerLine } from './isPrivateKeyMarkerLine'
 import { isSchemeRelativeUrl } from './isSchemeRelativeUrl'
 import { isSecretTableLabel } from './isSecretTableLabel'
 import { isSecretVariableName } from './isSecretVariableName'
 import { isTaxReferenceLabel } from './isTaxReferenceLabel'
+import { isTaxReferenceValue } from './isTaxReferenceValue'
+import { isVariableNameValue } from './isVariableNameValue'
 import { listConversationSecretTokens } from './listConversationSecretTokens'
 import { listRecordRedactedSpans } from './listRecordRedactedSpans'
 import { listRedactedSpans } from './listRedactedSpans'
@@ -73,6 +81,14 @@ export const conversationRedactorSha256 = () =>
       isSchemeRelativeUrl,
       redactSensitiveText,
       redactConversationRecord,
+      isBase64Character,
+      PEM_BODY_PREFIX_MAX_LENGTH,
+      isPemBodyLine,
+      ASSIGNED_SECRET_KEYS,
+      isTaxReferenceValue,
+      isVariableNameValue,
+      isCodeReferenceValue,
+      isNonSecretValue,
       createKnownSecretRedactor,
       isKnownSecretCandidate,
       redactConversationText,
