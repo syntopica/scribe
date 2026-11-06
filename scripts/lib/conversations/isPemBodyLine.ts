@@ -1,9 +1,10 @@
 import { PEM_BODY_PREFIX_MAX_LENGTH } from './constants/PEM_BODY_PREFIX_MAX_LENGTH'
 import { isBase64Character } from './isBase64Character'
+import { isPemHeaderLine } from './isPemHeaderLine'
 
 /**
  * Whether a line inside an open PEM block is part of the key: blank, an RFC
- * 1421 header such as `Proc-Type: 4,ENCRYPTED`, or a base64 run behind at
+ * 1421 header (`isPemHeaderLine`), or a base64 run behind at
  * most a short prefix without letters (`   12\t`, `> `, `│ `), as printouts
  * number or quote a key.
  *
@@ -15,7 +16,7 @@ import { isBase64Character } from './isBase64Character'
 export const isPemBodyLine = (line: string) => {
   const trimmed = line.trimEnd()
   if (trimmed.trim() === '') return true
-  if (/^[A-Za-z-]+: \S/u.test(trimmed.trimStart())) return true
+  if (isPemHeaderLine(trimmed)) return true
   let start = trimmed.length
   while (start > 0 && isBase64Character(trimmed.charAt(start - 1))) start--
   const prefix = trimmed.slice(0, start)

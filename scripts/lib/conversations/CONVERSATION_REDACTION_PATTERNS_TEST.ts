@@ -228,3 +228,42 @@ void test('a truncated key takes no listing after it', () => {
   assert.ok(!redacted.includes(body), redacted)
   assert.ok(redacted.endsWith('611 Example S.L. B22903793'), redacted)
 })
+
+void test('a double-escaped private key goes and the config after it stays', () => {
+  const body = 'MII' + ALNUM.slice(0, 60)
+  const text = [
+    '"key": "-----BEGIN ' + 'PRIVATE KEY-----\\\\n' + body + '\\\\n',
+    'databaseUrl: "postgres://db.example.test/app"',
+    'host: db-123456',
+    'identityFile: ~/.ssh/example_ed25519',
+  ].join('\n')
+  const redacted = redactSensitiveText(text).text
+  assert.ok(!redacted.includes(body), redacted)
+  assert.ok(redacted.includes('host: db-123456'), redacted)
+  assert.ok(redacted.endsWith('identityFile: ~/.ssh/example_ed25519'), redacted)
+})
+
+void test('a word-colon line after a BEGIN marker opens no block', () => {
+  const text = [
+    'echo "-----BEGIN ' + 'PRIVATE KEY----- goes here"',
+    'host: db-123456',
+  ].join('\n')
+  assert.equal(redactSensitiveText(text).text, text)
+})
+
+void test('an encrypted key with its RFC 1421 headers goes whole', () => {
+  const body = 'MII' + ALNUM.slice(0, 60)
+  const text = [
+    '-----BEGIN RSA ' + 'PRIVATE KEY-----',
+    'Proc-Type: 4,ENCRYPTED',
+    'DEK-Info: AES-128-CBC,' + ALNUM.slice(0, 32),
+    '',
+    body,
+    '-----END RSA PRIVATE KEY-----',
+    'after',
+  ].join('\n')
+  const redacted = redactSensitiveText(text).text
+  assert.ok(!redacted.includes(body), redacted)
+  assert.ok(!redacted.includes('DEK-Info'), redacted)
+  assert.ok(redacted.endsWith('after'), redacted)
+})

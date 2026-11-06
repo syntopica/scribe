@@ -29,6 +29,7 @@ import { isInlineSecretLabel } from './isInlineSecretLabel'
 import { isKnownSecretCandidate } from './isKnownSecretCandidate'
 import { isNonSecretValue } from './isNonSecretValue'
 import { isPemBodyLine } from './isPemBodyLine'
+import { isPemHeaderLine } from './isPemHeaderLine'
 import { isPrivateKeyMarkerLine } from './isPrivateKeyMarkerLine'
 import { isSchemeRelativeUrl } from './isSchemeRelativeUrl'
 import { isSecretTableLabel } from './isSecretTableLabel'
@@ -84,6 +85,7 @@ export const conversationRedactorSha256 = () =>
       isBase64Character,
       PEM_BODY_PREFIX_MAX_LENGTH,
       isPemBodyLine,
+      isPemHeaderLine,
       ASSIGNED_SECRET_KEYS,
       isTaxReferenceValue,
       isVariableNameValue,
