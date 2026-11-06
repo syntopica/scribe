@@ -67,6 +67,23 @@ void test('the lines after a one-line JSON-escaped private key stay', () => {
   )
 })
 
+void test('a truncated one-line escaped private key goes and the rest stays', () => {
+  const body = 'b3Bl' + ALNUM.slice(0, 60)
+  const text =
+    '"key": "-----BEGIN OPENSSH ' +
+    'PRIVATE KEY-----\\n' +
+    body +
+    '\\n' +
+    body +
+    '..." (truncated)\n' +
+    'Run pnpm install from package.json next.'
+  const redacted = redactSensitiveText(text)
+  assert.ok(!redacted.text.includes(body), redacted.text)
+  assert.ok(redacted.text.includes('..." (truncated)'), redacted.text)
+  assert.ok(redacted.text.endsWith('Run pnpm install from package.json next.'))
+  assert.ok(redacted.redactions > 0)
+})
+
 void test('an environment assignment keeps its name and opening quote', () => {
   const value = ALNUM.slice(0, 32)
   assert.equal(
@@ -116,6 +133,8 @@ for (const line of [
   'Token count: ' + 'abcdefghij' + '0123456789',
   'export API_TOKEN=[REDACTED:secret]',
   'Result: 12 of 34 passed',
+  'SESSION_SECRET=' + 'crypto.randomBytes(32).toString(1)',
+  'Google API key https:' + '//www.example.com/a/settings/apikey2',
   "key: '" + 'exports/raw/2026-10-20/part_1/' + "manifest.json'",
 ]) {
   void test(`ids, hashes, public keys and prose stay: ${line}`, () => {

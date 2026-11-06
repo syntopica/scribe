@@ -2,6 +2,7 @@ import { INLINE_SECRET_PATTERN } from './constants/INLINE_SECRET_PATTERN'
 import { hasTokenShape } from './hasTokenShape'
 import { isFilePathValue } from './isFilePathValue'
 import { isInlineSecretLabel } from './isInlineSecretLabel'
+import { isSchemeRelativeUrl } from './isSchemeRelativeUrl'
 import type { RedactedText } from './types/RedactedText'
 
 /**
@@ -11,7 +12,7 @@ import type { RedactedText } from './types/RedactedText'
  * Notes and messages keep credentials as bullets ("- Client secret: `...`",
  * "Token API Hetzner Cloud: ..."), which the assigned-key list never sees. A
  * value without both letters and digits is prose, not a token, and stays, and
- * so does a file path (`isFilePathValue`).
+ * so does a file path or the rest of a URL.
  */
 export const redactLabelledInlineSecrets = (input: string): RedactedText => {
   let redactions = 0
@@ -26,6 +27,7 @@ export const redactLabelledInlineSecrets = (input: string): RedactedText => {
       if (
         !hasTokenShape(value) ||
         isFilePathValue(value) ||
+        isSchemeRelativeUrl(value) ||
         !isInlineSecretLabel(label)
       )
         return whole

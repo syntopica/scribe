@@ -4,6 +4,7 @@ import { CREDENTIAL_LABEL_MAX_WORDS } from './constants/CREDENTIAL_LABEL_MAX_WOR
 import { CREDENTIAL_LABEL_PREFIXES } from './constants/CREDENTIAL_LABEL_PREFIXES'
 import { CREDENTIAL_LABEL_SUFFIXES } from './constants/CREDENTIAL_LABEL_SUFFIXES'
 import { ENVIRONMENT_ASSIGNMENT_PATTERN } from './constants/ENVIRONMENT_ASSIGNMENT_PATTERN'
+import { ESCAPED_PRIVATE_KEY_PATTERN } from './constants/ESCAPED_PRIVATE_KEY_PATTERN'
 import { INLINE_SECRET_PATTERN } from './constants/INLINE_SECRET_PATTERN'
 import { NON_SECRET_VARIABLE_WORDS } from './constants/NON_SECRET_VARIABLE_WORDS'
 import { PUBLIC_KEY_QUALIFIERS } from './constants/PUBLIC_KEY_QUALIFIERS'
@@ -12,14 +13,19 @@ import { SPANISH_TOKEN_LINKS } from './constants/SPANISH_TOKEN_LINKS'
 import { VENDOR_TOKEN_PATTERNS } from './constants/VENDOR_TOKEN_PATTERNS'
 import { hashText } from './hashText'
 import { hasTokenShape } from './hasTokenShape'
+import { holdsEscapedPrivateKey } from './holdsEscapedPrivateKey'
+import { isCodeExpressionValue } from './isCodeExpressionValue'
 import { isFilePathValue } from './isFilePathValue'
 import { isInlineSecretLabel } from './isInlineSecretLabel'
+import { isPrivateKeyMarkerLine } from './isPrivateKeyMarkerLine'
+import { isSchemeRelativeUrl } from './isSchemeRelativeUrl'
 import { isSecretTableLabel } from './isSecretTableLabel'
 import { isSecretVariableName } from './isSecretVariableName'
 import { isTaxReferenceLabel } from './isTaxReferenceLabel'
 import { redactAssignedSecrets } from './redactAssignedSecrets'
 import { redactConversationRecord } from './redactConversationRecord'
 import { redactEnvironmentSecretAssignments } from './redactEnvironmentSecretAssignments'
+import { redactEscapedPrivateKeyLine } from './redactEscapedPrivateKeyLine'
 import { redactLabelledInlineSecrets } from './redactLabelledInlineSecrets'
 import { redactPrivateKeyBlocks } from './redactPrivateKeyBlocks'
 import { redactSensitiveText } from './redactSensitiveText'
@@ -48,6 +54,12 @@ export const conversationRedactorSha256 = () =>
       isTaxReferenceLabel,
       redactPrivateKeyBlocks,
       closesPrivateKeyOnSameLine,
+      holdsEscapedPrivateKey,
+      isPrivateKeyMarkerLine,
+      redactEscapedPrivateKeyLine,
+      ESCAPED_PRIVATE_KEY_PATTERN,
+      isCodeExpressionValue,
+      isSchemeRelativeUrl,
       redactSensitiveText,
       redactConversationRecord,
       VENDOR_TOKEN_PATTERNS,

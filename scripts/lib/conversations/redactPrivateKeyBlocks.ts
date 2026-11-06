@@ -1,36 +1,42 @@
 import { closesPrivateKeyOnSameLine } from './closesPrivateKeyOnSameLine'
+import { holdsEscapedPrivateKey } from './holdsEscapedPrivateKey'
+import { isPrivateKeyMarkerLine } from './isPrivateKeyMarkerLine'
+import { redactEscapedPrivateKeyLine } from './redactEscapedPrivateKeyLine'
 import type { RedactedText } from './types/RedactedText'
 
+/**
+ * Replace each PEM private key block with one marker.
+ *
+ * A key escaped onto one line, as JSON prints it, is replaced within its line
+ * whether or not truncation kept its END marker; a block opens only on a line
+ * that holds neither, and everything up to its END line goes.
+ */
 export const redactPrivateKeyBlocks = (input: string): RedactedText => {
-  const lines = input.split('\n')
   const output: string[] = []
   let insidePrivateKey = false
   let redactions = 0
 
-  for (const line of lines) {
-    const opens =
-      line.startsWith('-----BEGIN ') && line.includes('PRIVATE KEY-----')
-    if (opens && !insidePrivateKey && closesPrivateKeyOnSameLine(line)) {
-      output.push(line)
+  for (const line of input.split('\n')) {
+    if (insidePrivateKey) {
+      insidePrivateKey = !isPrivateKeyMarkerLine(line, 'END')
       continue
     }
-    if (opens) {
-      if (!insidePrivateKey) {
-        output.push('[REDACTED:private-key]')
-        redactions++
-      }
-      insidePrivateKey = true
+    if (holdsEscapedPrivateKey(line)) {
+      const redacted = redactEscapedPrivateKeyLine(line)
+      output.push(redacted.text)
+      redactions += redacted.redactions
       continue
     }
     if (
-      insidePrivateKey &&
-      line.startsWith('-----END ') &&
-      line.includes('PRIVATE KEY-----')
+      !isPrivateKeyMarkerLine(line, 'BEGIN') ||
+      closesPrivateKeyOnSameLine(line)
     ) {
-      insidePrivateKey = false
+      output.push(line)
       continue
     }
-    if (!insidePrivateKey) output.push(line)
+    output.push('[REDACTED:private-key]')
+    redactions++
+    insidePrivateKey = true
   }
 
   return { text: output.join('\n'), redactions }
