@@ -36,6 +36,9 @@ for (const line of [
   'Merchant key: `{v}`',
   'Contraseña MySQL: {v}',
   'export RESEND_API_KEY={v}',
+  'export CF_API_TOKENS={v}',
+  'ATOKEN={v}',
+  'Primary API key: {v}',
 ]) {
   void test(`an inline labelled credential is redacted: ${line}`, () => {
     const value = ALNUM.slice(0, 32)
@@ -67,6 +70,16 @@ for (const line of [
   'Commit: ' + '4f257ac8d3e1b2c4f5a6' + 'b7c8d9e0f1a2b3c4d5e6',
   'Supabase Public Key: ' + 'sb_publishable_' + 'abc123def456ghi789',
   'STOP_ALL_KEY = "Escape"',
+  'Clave de liquidación: ' + 'A0123456' + '78901234',
+  'clave_liquidacion: ' + 'A0123456' + '78901234',
+  'export SCANNED_TOKEN_PATTERN=' + 'gh[ops]_[a-z0-9]{36}',
+  'OAUTH_TOKEN_URI=' + 'https://oauth2.example.com/token2',
+  'MAX_TOKENS=' + 'abc12345',
+  'export TOKENIZER=' + 'cl100k_base',
+  'CONTACT_FORM_STORAGE_KEY=' + 'contact-form-v2',
+  'NEXT_PUBLIC_TURNSTILE_SITE_KEY=' + '0x4AAAAAAABc1dEf2g',
+  'Sec-WebSocket-Key: ' + 'dGhlIHNhbXBsZSBub25j' + 'ZQ1x',
+  'Cache restored from key: ' + 'linux-node-' + 'abc123def456ghi789',
   'next_public_turnstile_site_key: ' + '0x4AAAAAAA' + 'Bc1dEf2gHi3j',
   'Idempotency-Key: ' + 'a1b2c3d4e5f6' + 'g7h8i9j0',
   'Token count: ' + 'abcdefghij' + '0123456789',

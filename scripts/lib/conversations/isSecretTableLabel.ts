@@ -1,6 +1,7 @@
 import { CREDENTIAL_LABEL_MAX_WORDS } from './constants/CREDENTIAL_LABEL_MAX_WORDS'
 import { CREDENTIAL_LABEL_PREFIXES } from './constants/CREDENTIAL_LABEL_PREFIXES'
 import { CREDENTIAL_LABEL_SUFFIXES } from './constants/CREDENTIAL_LABEL_SUFFIXES'
+import { isTaxReferenceLabel } from './isTaxReferenceLabel'
 
 /**
  * Accept English/Spanish credential labels, qualified or not, with Markdown
@@ -22,6 +23,7 @@ export const isSecretTableLabel = (cell: string) => {
   return (
     CREDENTIAL_LABEL_SUFFIXES.some(
       (suffix) => joined === suffix || joined.endsWith(` ${suffix}`),
-    ) || CREDENTIAL_LABEL_PREFIXES.includes(first)
+    ) ||
+    (CREDENTIAL_LABEL_PREFIXES.includes(first) && !isTaxReferenceLabel(words))
   )
 }
