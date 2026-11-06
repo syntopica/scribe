@@ -8,6 +8,7 @@ import { ESCAPED_PRIVATE_KEY_PATTERN } from './constants/ESCAPED_PRIVATE_KEY_PAT
 import { INLINE_SECRET_PATTERN } from './constants/INLINE_SECRET_PATTERN'
 import { KNOWN_SECRET_MIN_LENGTH } from './constants/KNOWN_SECRET_MIN_LENGTH'
 import { NON_SECRET_VARIABLE_WORDS } from './constants/NON_SECRET_VARIABLE_WORDS'
+import { PRIVATE_KEY_BEGIN_PATTERN } from './constants/PRIVATE_KEY_BEGIN_PATTERN'
 import { PUBLIC_KEY_QUALIFIERS } from './constants/PUBLIC_KEY_QUALIFIERS'
 import { SECRET_VARIABLE_WORD_PATTERN } from './constants/SECRET_VARIABLE_WORD_PATTERN'
 import { SPANISH_TOKEN_LINKS } from './constants/SPANISH_TOKEN_LINKS'
@@ -30,6 +31,7 @@ import { isTaxReferenceLabel } from './isTaxReferenceLabel'
 import { listConversationSecretTokens } from './listConversationSecretTokens'
 import { listRecordRedactedSpans } from './listRecordRedactedSpans'
 import { listRedactedSpans } from './listRedactedSpans'
+import { looksLikePemBodyLine } from './looksLikePemBodyLine'
 import { opensPrivateKeyBlock } from './opensPrivateKeyBlock'
 import { redactAssignedSecrets } from './redactAssignedSecrets'
 import { redactConversationRecord } from './redactConversationRecord'
@@ -77,6 +79,8 @@ export const conversationRedactorSha256 = () =>
       isBoundedOccurrence,
       isAlphanumericCharacter,
       opensPrivateKeyBlock,
+      looksLikePemBodyLine,
+      PRIVATE_KEY_BEGIN_PATTERN,
       addKnownSecretValues,
       listRecordRedactedSpans,
       listRedactedSpans,

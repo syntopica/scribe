@@ -197,3 +197,16 @@ void test('a key printed with line numbers still goes whole', () => {
   assert.ok(!redacted.includes(body), redacted)
   assert.ok(redacted.endsWith('after'))
 })
+
+void test('a quoted BEGIN marker with its key below and no END still goes', () => {
+  const body = 'MII' + ALNUM.slice(0, 60)
+  const text = [
+    "key = '-----BEGIN RSA " + "PRIVATE KEY-----',",
+    body,
+    body,
+    '... (output truncated)',
+  ].join('\n')
+  const redacted = redactSensitiveText(text).text
+  assert.ok(!redacted.includes(body), redacted)
+  assert.ok(redacted.startsWith("key = '[REDACTED:private-key]"), redacted)
+})

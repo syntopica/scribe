@@ -1,14 +1,25 @@
-import { isPrivateKeyMarkerLine } from './isPrivateKeyMarkerLine'
+import { PRIVATE_KEY_BEGIN_PATTERN } from './constants/PRIVATE_KEY_BEGIN_PATTERN'
+import { looksLikePemBodyLine } from './looksLikePemBodyLine'
 
 /**
- * Whether a line is the opening line of a PEM private key block: the BEGIN
- * marker with nothing after its closing dashes.
+ * Where a PEM private key block opens on `line`, or `undefined` when it opens
+ * none.
  *
- * `-----BEGIN OPENSSH PRIVATE KEY----- ... and the END marker` is prose about
- * a key, and opening a block on it took the 141 lines after it (2026-11-06).
- * The decision is made on this line alone: a block, once open, runs to its
- * END line whatever its body lines look like, so a key printed with line
- * numbers or quote prefixes still goes whole.
+ * A BEGIN marker with nothing after it opens a block, as does one with text
+ * after it when the next line reads as key body: a quoted marker with its key
+ * on the lines below, END lost to truncation, still goes. A marker followed by
+ * text and then prose is prose about a key: opening a block on it took the 141
+ * lines after it (2026-11-06). An open block runs to its END line whatever its
+ * body lines look like, failing closed.
  */
-export const opensPrivateKeyBlock = (line: string) =>
-  isPrivateKeyMarkerLine(line, 'BEGIN') && /PRIVATE KEY-----\s*$/u.test(line)
+export const opensPrivateKeyBlock = (
+  line: string,
+  next: string | undefined,
+) => {
+  const marker = PRIVATE_KEY_BEGIN_PATTERN.exec(line)
+  if (marker === null) return undefined
+  const after = line.slice(marker.index + marker[0].length)
+  return after.trim() === '' || looksLikePemBodyLine(next)
+    ? marker.index
+    : undefined
+}
