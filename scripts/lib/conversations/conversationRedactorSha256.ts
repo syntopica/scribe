@@ -11,6 +11,7 @@ import { SPANISH_TOKEN_LINKS } from './constants/SPANISH_TOKEN_LINKS'
 import { VENDOR_TOKEN_PATTERNS } from './constants/VENDOR_TOKEN_PATTERNS'
 import { hashText } from './hashText'
 import { hasTokenShape } from './hasTokenShape'
+import { isFilePathValue } from './isFilePathValue'
 import { isInlineSecretLabel } from './isInlineSecretLabel'
 import { isSecretTableLabel } from './isSecretTableLabel'
 import { isSecretVariableName } from './isSecretVariableName'
@@ -39,6 +40,7 @@ export const conversationRedactorSha256 = () =>
       redactLabelledInlineSecrets,
       redactEnvironmentSecretAssignments,
       hasTokenShape,
+      isFilePathValue,
       isInlineSecretLabel,
       isSecretTableLabel,
       isSecretVariableName,

@@ -1,3 +1,4 @@
+import { isCalendarDate } from './isCalendarDate'
 import { trimConversationPunctuation } from './trimConversationPunctuation'
 
 /**
@@ -13,7 +14,10 @@ import { trimConversationPunctuation } from './trimConversationPunctuation'
  * letters) are needles, while `PRIVATE`, `BEGIN` or `password` -- words
  * ordinary prose also holds, none that long -- are not. A span shaped like
  * URL credentials (`user:password`, no whitespace) also yields its password
- * whenever it has at least 6 characters, whatever its letters.
+ * whenever it has at least 6 characters, whatever its letters. A bare ISO
+ * date is never a needle: every timestamp in the archive holds one, and a
+ * dated path inside a removed span turned 57,671 fragments into false leaks
+ * (2026-11-06).
  */
 export const listConversationSecretTokens = (span: string) => {
   const tokens = span
@@ -23,6 +27,7 @@ export const listConversationSecretTokens = (span: string) => {
       (piece) =>
         piece.length >= 24 || (piece.length >= 8 && !/^\p{L}+$/u.test(piece)),
     )
+    .filter((piece) => !isCalendarDate(piece))
   const credentials = /^[^\s:@/]+:([^\s@/]{6,})$/u.exec(span)
   return credentials?.[1] === undefined ? tokens : [...tokens, credentials[1]]
 }

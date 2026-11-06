@@ -1,5 +1,6 @@
 import { INLINE_SECRET_PATTERN } from './constants/INLINE_SECRET_PATTERN'
 import { hasTokenShape } from './hasTokenShape'
+import { isFilePathValue } from './isFilePathValue'
 import { isInlineSecretLabel } from './isInlineSecretLabel'
 import type { RedactedText } from './types/RedactedText'
 
@@ -9,7 +10,8 @@ import type { RedactedText } from './types/RedactedText'
  *
  * Notes and messages keep credentials as bullets ("- Client secret: `...`",
  * "Token API Hetzner Cloud: ..."), which the assigned-key list never sees. A
- * value without both letters and digits is prose, not a token, and stays.
+ * value without both letters and digits is prose, not a token, and stays, and
+ * so does a file path (`isFilePathValue`).
  */
 export const redactLabelledInlineSecrets = (input: string): RedactedText => {
   let redactions = 0
@@ -21,7 +23,12 @@ export const redactLabelledInlineSecrets = (input: string): RedactedText => {
           .split(/[|*•;,/]| - /u)
           .at(-1)
           ?.trim() ?? ''
-      if (!hasTokenShape(value) || !isInlineSecretLabel(label)) return whole
+      if (
+        !hasTokenShape(value) ||
+        isFilePathValue(value) ||
+        !isInlineSecretLabel(label)
+      )
+        return whole
       redactions++
       // The match ends with the value and its closing quote.
       return `${whole.slice(0, whole.length - value.length - quote.length)}[REDACTED:secret]${quote}`

@@ -99,6 +99,7 @@ for (const line of [
   'Token count: ' + 'abcdefghij' + '0123456789',
   'export API_TOKEN=[REDACTED:secret]',
   'Result: 12 of 34 passed',
+  "key: '" + 'exports/raw/2026-10-20/part_1/' + "manifest.json'",
 ]) {
   void test(`ids, hashes, public keys and prose stay: ${line}`, () => {
     assert.deepEqual(redactSensitiveText(line), { text: line, redactions: 0 })

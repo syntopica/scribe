@@ -311,6 +311,13 @@ void test('an all-letter key line is a needle, a long ordinary word is not', () 
   )
 })
 
+void test('a dated path segment of a removed span is not a needle', () => {
+  assert.deepEqual(
+    listConversationSecretTokens('exports/2026-10-20/' + 'a1b2c3d4e5f6'),
+    ['a1b2c3d4e5f6'],
+  )
+})
+
 void test('the bare password of removed URL credentials fails verify', async (context) => {
   const withUrl = createConversationFragment({
     id: 'r',
