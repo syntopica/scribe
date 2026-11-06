@@ -2,6 +2,8 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { REDACTION_SENTINEL_ALNUM as ALNUM } from './fixtures/REDACTION_SENTINEL_ALNUM'
 import { VENDOR_TOKEN_SENTINELS } from './fixtures/VENDOR_TOKEN_SENTINELS'
+import { createConversationFragment } from './fixtures/createConversationFragment'
+import { redactConversationRecord } from './redactConversationRecord'
 import { redactSensitiveText } from './redactSensitiveText'
 
 for (const [name, secret] of Object.entries(VENDOR_TOKEN_SENTINELS)) {
@@ -102,3 +104,19 @@ for (const line of [
     assert.deepEqual(redactSensitiveText(line), { text: line, redactions: 0 })
   })
 }
+
+void test('re-redacting a record leaves the events without secrets byte for byte', () => {
+  const record = createConversationFragment({ id: 'mixed', events: 2 })
+  const secret = 'sk_' + 'live_' + ALNUM.slice(0, 24)
+  const padded = {
+    ...record,
+    events: [
+      { ...record.events[0], text: `  the key is ${secret}  ` },
+      { ...record.events[1], text: '  untouched padding  ' },
+    ],
+  } as typeof record
+  const redacted = redactConversationRecord(padded)
+  assert.equal(redacted.events[0]?.text, 'the key is [REDACTED:token]')
+  assert.equal(redacted.events[1], padded.events[1])
+  assert.equal(redacted.provenance.redactions, record.provenance.redactions + 1)
+})

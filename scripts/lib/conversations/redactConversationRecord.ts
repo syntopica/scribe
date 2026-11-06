@@ -33,10 +33,13 @@ export const redactConversationRecord = (
     ...record,
     title: title.text,
     ...(workspace === undefined ? {} : { workspace: workspace.text }),
-    events: events.map(({ event, redacted }) => ({
-      ...event,
-      text: redacted.text.trim(),
-    })),
+    // Only an event the redactor changed is rewritten, and trimmed as capture
+    // trims: the others keep their bytes, whitespace included.
+    events: events.map(({ event, redacted }) =>
+      redacted.redactions === 0
+        ? event
+        : { ...event, text: redacted.text.trim() },
+    ),
     provenance: {
       ...record.provenance,
       redactions: record.provenance.redactions + redactions,
