@@ -1,6 +1,5 @@
 import { addKnownSecretValues } from './addKnownSecretValues'
 import { applyRedactionPattern } from './applyRedactionPattern'
-import { closesPrivateKeyOnSameLine } from './closesPrivateKeyOnSameLine'
 import { CREDENTIAL_LABEL_MAX_WORDS } from './constants/CREDENTIAL_LABEL_MAX_WORDS'
 import { CREDENTIAL_LABEL_PREFIXES } from './constants/CREDENTIAL_LABEL_PREFIXES'
 import { CREDENTIAL_LABEL_SUFFIXES } from './constants/CREDENTIAL_LABEL_SUFFIXES'
@@ -23,7 +22,6 @@ import { isCodeExpressionValue } from './isCodeExpressionValue'
 import { isFilePathValue } from './isFilePathValue'
 import { isInlineSecretLabel } from './isInlineSecretLabel'
 import { isKnownSecretCandidate } from './isKnownSecretCandidate'
-import { isPemBodyLine } from './isPemBodyLine'
 import { isPrivateKeyMarkerLine } from './isPrivateKeyMarkerLine'
 import { isSchemeRelativeUrl } from './isSchemeRelativeUrl'
 import { isSecretTableLabel } from './isSecretTableLabel'
@@ -32,6 +30,7 @@ import { isTaxReferenceLabel } from './isTaxReferenceLabel'
 import { listConversationSecretTokens } from './listConversationSecretTokens'
 import { listRecordRedactedSpans } from './listRecordRedactedSpans'
 import { listRedactedSpans } from './listRedactedSpans'
+import { opensPrivateKeyBlock } from './opensPrivateKeyBlock'
 import { redactAssignedSecrets } from './redactAssignedSecrets'
 import { redactConversationRecord } from './redactConversationRecord'
 import { redactConversationText } from './redactConversationText'
@@ -64,7 +63,6 @@ export const conversationRedactorSha256 = () =>
       isSecretVariableName,
       isTaxReferenceLabel,
       redactPrivateKeyBlocks,
-      closesPrivateKeyOnSameLine,
       holdsEscapedPrivateKey,
       isPrivateKeyMarkerLine,
       redactEscapedPrivateKeyLine,
@@ -78,7 +76,7 @@ export const conversationRedactorSha256 = () =>
       redactConversationText,
       isBoundedOccurrence,
       isAlphanumericCharacter,
-      isPemBodyLine,
+      opensPrivateKeyBlock,
       addKnownSecretValues,
       listRecordRedactedSpans,
       listRedactedSpans,

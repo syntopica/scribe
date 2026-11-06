@@ -183,3 +183,17 @@ void test('a known value is replaced only as a token of its own', () => {
     redactions: 0,
   })
 })
+
+void test('a key printed with line numbers still goes whole', () => {
+  const body = 'MII' + ALNUM.slice(0, 60)
+  const text = [
+    '-----BEGIN RSA ' + 'PRIVATE KEY-----',
+    '   12\t' + body,
+    '> ' + body,
+    '-----END RSA PRIVATE KEY-----',
+    'after',
+  ].join('\n')
+  const redacted = redactSensitiveText(text).text
+  assert.ok(!redacted.includes(body), redacted)
+  assert.ok(redacted.endsWith('after'))
+})
