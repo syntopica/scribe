@@ -8,11 +8,13 @@ import { trimConversationPunctuation } from './trimConversationPunctuation'
  * of it -- the password of `alice:supersecret123`, one line of a PEM body --
  * must be found too. So the span is split on whitespace and on `:` `@` `/`
  * `=` and quote characters, each piece is stripped of leading and trailing
- * punctuation, and a piece is kept when it has at least 8 characters and is
- * not purely alphabetic, or when it has at least 24 characters whatever its
- * letters: `supersecret123` and base64 key lines (64 characters, sometimes all
- * letters) are needles, while `PRIVATE`, `BEGIN` or `password` -- words
- * ordinary prose also holds, none that long -- are not. A span shaped like
+ * punctuation, and a piece is kept when it has at least 8 characters and a
+ * digit, or when it has at least 24 characters whatever its letters:
+ * `supersecret123` and base64 key lines (64 characters, sometimes all letters)
+ * are needles, while `PRIVATE`, `password`, a domain such as `example.com`, a
+ * file name or the `n-----END` an escaped key leaves -- pieces ordinary prose
+ * also holds, which verify then reported as 561 leaking fragments on
+ * 2026-11-06 -- are not. A span shaped like
  * URL credentials (`user:password`, no whitespace) also yields its password
  * whenever it has at least 6 characters, whatever its letters. A bare ISO
  * date is never a needle: every timestamp in the archive holds one, and a
@@ -25,7 +27,7 @@ export const listConversationSecretTokens = (span: string) => {
     .map(trimConversationPunctuation)
     .filter(
       (piece) =>
-        piece.length >= 24 || (piece.length >= 8 && !/^\p{L}+$/u.test(piece)),
+        piece.length >= 24 || (piece.length >= 8 && /\p{N}/u.test(piece)),
     )
     .filter((piece) => !isCalendarDate(piece))
   const credentials = /^[^\s:@/]+:([^\s@/]{6,})$/u.exec(span)

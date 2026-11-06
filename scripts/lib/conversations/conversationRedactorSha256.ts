@@ -34,6 +34,7 @@ import { isNonSecretValue } from './isNonSecretValue'
 import { isPemBodyLine } from './isPemBodyLine'
 import { isPemHeaderLine } from './isPemHeaderLine'
 import { isPrivateKeyMarkerLine } from './isPrivateKeyMarkerLine'
+import { isPrivateKeyMarkerText } from './isPrivateKeyMarkerText'
 import { isPrivateKeyMaterial } from './isPrivateKeyMaterial'
 import { isSchemeRelativeUrl } from './isSchemeRelativeUrl'
 import { isSecretTableLabel } from './isSecretTableLabel'
@@ -117,6 +118,7 @@ export const conversationRedactorSha256 = () =>
       listRecordRedactedSpans,
       listRedactedSpans,
       listConversationSecretTokens,
+      isPrivateKeyMarkerText,
       KNOWN_SECRET_MIN_LENGTH,
       VENDOR_TOKEN_PATTERNS,
       INLINE_SECRET_PATTERN,

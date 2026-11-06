@@ -1,3 +1,4 @@
+import { isPrivateKeyMarkerText } from './isPrivateKeyMarkerText'
 import { listConversationSecretTokens } from './listConversationSecretTokens'
 import { trimConversationQuotes } from './trimConversationQuotes'
 
@@ -12,7 +13,8 @@ import { trimConversationQuotes } from './trimConversationQuotes'
  * are stripped, because a quoted password's span starts at its opening quote
  * and a bare copy elsewhere must still be found. A span shorter than 6
  * characters, or made only of an older `[REDACTED:...]` marker, is dropped:
- * a needle that short would match all over a corpus. Every secret pattern
+ * a needle that short would match all over a corpus. Neither is a bare PEM
+ * marker (`isPrivateKeyMarkerText`). Every secret pattern
  * needs at least 8 characters; only URL credentials can be shorter, and a
  * credential under 6 characters is not searched for. Each kept span is
  * followed by its sub-needles (`listConversationSecretTokens`), so a surviving
@@ -37,6 +39,7 @@ export const listRedactedSpans = (original: string, redacted: string) => {
       spans
         .map((span) => trimConversationQuotes(span.trim()).trim())
         .filter((span) => span.replaceAll(marker, '').trim().length >= 6)
+        .filter((span) => !isPrivateKeyMarkerText(span))
         .flatMap((span) => [span, ...listConversationSecretTokens(span)]),
     ),
   ]

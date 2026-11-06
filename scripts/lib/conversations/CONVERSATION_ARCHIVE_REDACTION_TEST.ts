@@ -341,6 +341,22 @@ void test('an all-letter key line is a needle, a long ordinary word is not', () 
   )
 })
 
+void test('a domain, a file name or a PEM marker piece is not a needle', () => {
+  assert.deepEqual(
+    listConversationSecretTokens(
+      'id2:<user-12@example.com> credentials.md/k1y-ab-cdef KEY-----\\n-----END',
+    ),
+    ['id2', 'user-12', 'k1y-ab-cdef'].filter((piece) => piece.length >= 8),
+  )
+  assert.deepEqual(
+    listRedactedSpans(
+      'a -----BEGIN OPENSSH PRIVATE KEY----- b',
+      'a [REDACTED:private-key] b',
+    ),
+    [],
+  )
+})
+
 void test('a dated path segment of a removed span is not a needle', () => {
   assert.deepEqual(
     listConversationSecretTokens('exports/2026-10-20/' + 'a1b2c3d4e5f6'),
