@@ -267,3 +267,12 @@ void test('an encrypted key with its RFC 1421 headers goes whole', () => {
   assert.ok(!redacted.includes('DEK-Info'), redacted)
   assert.ok(redacted.endsWith('after'), redacted)
 })
+
+void test('a placeholder BEGIN marker takes no prose up to a later END marker', () => {
+  const text = [
+    '"keys": "-----BEGIN OPENSSH ' + "PRIVATE KEY----- ... comment 'deploy'\",",
+    '  "note": "nova is the ProxyJump bastion for db-123456, see below",',
+    '  "tail": "-----END OPENSSH PRIVATE KEY----- (end)"',
+  ].join('\n')
+  assert.equal(redactSensitiveText(text).text, text)
+})

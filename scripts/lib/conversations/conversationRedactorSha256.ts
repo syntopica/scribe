@@ -11,6 +11,7 @@ import { KNOWN_SECRET_MIN_LENGTH } from './constants/KNOWN_SECRET_MIN_LENGTH'
 import { NON_SECRET_VARIABLE_WORDS } from './constants/NON_SECRET_VARIABLE_WORDS'
 import { PEM_BODY_PREFIX_MAX_LENGTH } from './constants/PEM_BODY_PREFIX_MAX_LENGTH'
 import { PRIVATE_KEY_BEGIN_PATTERN } from './constants/PRIVATE_KEY_BEGIN_PATTERN'
+import { PRIVATE_KEY_END_PATTERN } from './constants/PRIVATE_KEY_END_PATTERN'
 import { PUBLIC_KEY_QUALIFIERS } from './constants/PUBLIC_KEY_QUALIFIERS'
 import { SECRET_VARIABLE_WORD_PATTERN } from './constants/SECRET_VARIABLE_WORD_PATTERN'
 import { SPANISH_TOKEN_LINKS } from './constants/SPANISH_TOKEN_LINKS'
@@ -31,6 +32,7 @@ import { isNonSecretValue } from './isNonSecretValue'
 import { isPemBodyLine } from './isPemBodyLine'
 import { isPemHeaderLine } from './isPemHeaderLine'
 import { isPrivateKeyMarkerLine } from './isPrivateKeyMarkerLine'
+import { isPrivateKeyMaterial } from './isPrivateKeyMaterial'
 import { isSchemeRelativeUrl } from './isSchemeRelativeUrl'
 import { isSecretTableLabel } from './isSecretTableLabel'
 import { isSecretVariableName } from './isSecretVariableName'
@@ -47,6 +49,7 @@ import { redactConversationRecord } from './redactConversationRecord'
 import { redactConversationText } from './redactConversationText'
 import { redactEnvironmentSecretAssignments } from './redactEnvironmentSecretAssignments'
 import { redactEscapedPrivateKeyLine } from './redactEscapedPrivateKeyLine'
+import { redactInlinePrivateKeys } from './redactInlinePrivateKeys'
 import { redactLabelledInlineSecrets } from './redactLabelledInlineSecrets'
 import { redactPrivateKeyBlocks } from './redactPrivateKeyBlocks'
 import { redactSensitiveText } from './redactSensitiveText'
@@ -74,6 +77,7 @@ export const conversationRedactorSha256 = () =>
       isSecretVariableName,
       isTaxReferenceLabel,
       redactPrivateKeyBlocks,
+      redactInlinePrivateKeys,
       holdsEscapedPrivateKey,
       isPrivateKeyMarkerLine,
       redactEscapedPrivateKeyLine,
@@ -86,6 +90,7 @@ export const conversationRedactorSha256 = () =>
       PEM_BODY_PREFIX_MAX_LENGTH,
       isPemBodyLine,
       isPemHeaderLine,
+      isPrivateKeyMaterial,
       ASSIGNED_SECRET_KEYS,
       isTaxReferenceValue,
       isVariableNameValue,
@@ -99,6 +104,7 @@ export const conversationRedactorSha256 = () =>
       opensPrivateKeyBlock,
       looksLikePemBodyLine,
       PRIVATE_KEY_BEGIN_PATTERN,
+      PRIVATE_KEY_END_PATTERN,
       addKnownSecretValues,
       listRecordRedactedSpans,
       listRedactedSpans,

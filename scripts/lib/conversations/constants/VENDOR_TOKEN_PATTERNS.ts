@@ -3,17 +3,12 @@
  * rules (8.30.1), applied after the generic token patterns.
  *
  * Ported from Atrium's `vendor_token_patterns.py`: Stripe live keys, Google
- * API keys, Airtable tokens, an age secret key, JSON-escaped and base64
- * private keys and `export NAME_KEY=value` lines reached its context output
+ * API keys, Airtable tokens, an age secret key, base64 private keys (an inline
+ * one is `redactInlinePrivateKeys`) and `export NAME_KEY=value` lines reached its context output
  * from curated notes. Only prefixed shapes are kept, because a bare hex or
  * base64 run is as often a hash or an id as a secret.
  */
 export const VENDOR_TOKEN_PATTERNS: readonly (readonly [RegExp, string])[] = [
-  // private-key, written inline with literal "\n" escapes (JSON) or on one line
-  [
-    /-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----.*?-----END [A-Z0-9 ]*PRIVATE KEY-----/gsu,
-    '[REDACTED:private-key]',
-  ],
   // a PEM block base64-encoded once more: "-----BEGIN" is "LS0tLS1CRUdJT"
   [/\bLS0tLS1CRUdJT[A-Za-z0-9+/=]{40,}/gu, '[REDACTED:private-key]'],
   // stripe-access-token

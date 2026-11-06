@@ -2,6 +2,7 @@ import { applyRedactionPattern } from './applyRedactionPattern'
 import { VENDOR_TOKEN_PATTERNS } from './constants/VENDOR_TOKEN_PATTERNS'
 import { redactAssignedSecrets } from './redactAssignedSecrets'
 import { redactEnvironmentSecretAssignments } from './redactEnvironmentSecretAssignments'
+import { redactInlinePrivateKeys } from './redactInlinePrivateKeys'
 import { redactLabelledInlineSecrets } from './redactLabelledInlineSecrets'
 import { redactPrivateKeyBlocks } from './redactPrivateKeyBlocks'
 import type { RedactedText } from './types/RedactedText'
@@ -11,12 +12,14 @@ export const redactSensitiveText = (input: string): RedactedText => {
   const assigned = redactAssignedSecrets(privateKeys.text)
   const labelled = redactLabelledInlineSecrets(assigned.text)
   const environment = redactEnvironmentSecretAssignments(labelled.text)
-  let text = environment.text
+  const inlineKeys = redactInlinePrivateKeys(environment.text)
+  let text = inlineKeys.text
   let redactions =
     privateKeys.redactions +
     assigned.redactions +
     labelled.redactions +
-    environment.redactions
+    environment.redactions +
+    inlineKeys.redactions
 
   for (const [pattern, replacement] of [
     [/\bBearer\s+(?!\[REDACTED:)\S{16,}/giu, 'Bearer [REDACTED:token]'],
