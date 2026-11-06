@@ -390,3 +390,89 @@ void test('scribe erase redacts only the conversations the redactor changes', as
     secretsPresent: [],
   })
 })
+
+void test('scribe erase purge removes an unselected generation and keeps the selected one and its rollback', async (context) => {
+  const { root, generation } = await seedErasureArchiveWithCapture(context)
+  const work = await createConversationScratchDirectory(context, 'erase-cli-')
+  const planFile = join(work, 'erasure-plan.json')
+  const planned = runScribeErase(
+    'plan',
+    '--root',
+    root,
+    '--conversation',
+    'a',
+    '--output',
+    planFile,
+  )
+  assert.equal(planned.status, 0, planned.stderr)
+  const applied = runScribeErase('apply', '--root', root, '--plan', planFile)
+  assert.equal(applied.status, 0, applied.stderr)
+  const { toGenerationId: sealed } =
+    await readConversationErasurePlanFile(planFile)
+  assert.ok(sealed !== undefined)
+  const directory = join(root, 'generations', `g_${sealed}`)
+
+  const report = runScribeErase('purge', '--root', root, '--generation', sealed)
+  assert.equal(report.status, 0, report.stderr)
+  assert.partialDeepStrictEqual(JSON.parse(report.stdout) as unknown, {
+    generationId: sealed,
+    applied: false,
+  })
+  await fs.access(directory)
+
+  const selected = runScribeErase(
+    'purge',
+    '--root',
+    root,
+    '--generation',
+    generation.generationId,
+    '--apply',
+  )
+  assert.equal(selected.status, 1)
+  assert.match(selected.stdout, /selected generation/)
+
+  const activated = runScribeErase(
+    'activate',
+    '--root',
+    root,
+    '--generation',
+    sealed,
+  )
+  assert.equal(activated.status, 0, activated.stderr)
+  const rollback = runScribeErase(
+    'purge',
+    '--root',
+    root,
+    '--generation',
+    generation.generationId,
+    '--apply',
+  )
+  assert.equal(rollback.status, 1)
+  assert.match(rollback.stdout, /--include-rollback/)
+  await fs.access(join(root, 'generations', `g_${generation.generationId}`))
+
+  const purged = runScribeErase(
+    'purge',
+    '--root',
+    root,
+    '--generation',
+    generation.generationId,
+    '--include-rollback',
+    '--apply',
+  )
+  assert.equal(purged.status, 0, purged.stderr)
+  assert.partialDeepStrictEqual(JSON.parse(purged.stdout) as unknown, {
+    applied: true,
+  })
+  await assert.rejects(
+    fs.access(join(root, 'generations', `g_${generation.generationId}`)),
+  )
+  assert.deepEqual(
+    (await fs.readdir(join(root, 'generations'))).filter((name) =>
+      name.startsWith('.purging-'),
+    ),
+    [],
+  )
+  const current = await readConversationArchiveGeneration(root)
+  assert.equal(current.generation.generationId, sealed)
+})

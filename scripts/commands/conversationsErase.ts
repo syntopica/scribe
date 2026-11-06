@@ -1,13 +1,15 @@
 import { conversationsEraseActivate } from './conversationsEraseActivate'
 import { conversationsEraseApply } from './conversationsEraseApply'
 import { conversationsErasePlan } from './conversationsErasePlan'
+import { conversationsErasePurge } from './conversationsErasePurge'
 import { conversationsEraseSubcommandName } from './conversationsEraseSubcommandName'
 import { conversationsEraseVerify } from './conversationsEraseVerify'
 
 /**
- * `scribe erase plan|apply|verify|activate`: the four reviewed steps of an
- * erasure, each run on its own so a person reads the plan before anything is
- * rewritten and names the generation before anything is selected.
+ * `scribe erase plan|apply|verify|activate|purge`: the four reviewed steps of
+ * an erasure and the removal of a generation they left behind, each run on its
+ * own so a person reads the plan before anything is rewritten and names the
+ * generation before anything is selected or removed.
  *
  * Every step requires `--root` and has no default, so the command cannot reach
  * a live archive by omission. Output is JSON on stdout; refusals go to stderr
@@ -32,10 +34,14 @@ export const main = async () => {
       await conversationsEraseActivate(process.argv)
       return
     }
+    case 'purge': {
+      await conversationsErasePurge(process.argv)
+      return
+    }
     case undefined:
     default: {
       console.error(
-        'usage: scribe erase plan|apply|verify|activate --root <root> [flags]',
+        'usage: scribe erase plan|apply|verify|activate|purge --root <root> [flags]',
       )
       process.exitCode = 2
     }
