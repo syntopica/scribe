@@ -1,3 +1,4 @@
+import { createNeedleMatcher } from './createNeedleMatcher'
 import { listConversationArchiveSegments } from './listConversationArchiveSegments'
 import { listConversationFieldLeaks } from './listConversationFieldLeaks'
 import { listUnredactableConversationFields } from './listUnredactableConversationFields'
@@ -22,7 +23,7 @@ export const scanConversationGenerationForLeaks = async (
       options.root,
       options.generationId,
     )
-  const needles = [...options.needles]
+  const contains = createNeedleMatcher(options.needles)
   const containing: ConversationFieldLeak[] = []
   const unredactable: ConversationFieldLeak[] = []
   for (const sha256 of await listConversationArchiveSegments(segments)) {
@@ -32,7 +33,7 @@ export const scanConversationGenerationForLeaks = async (
       generation,
     })
     for (const entry of segment.entries) {
-      containing.push(...listConversationFieldLeaks(entry, needles))
+      containing.push(...listConversationFieldLeaks(entry, contains))
       if (!options.conversationIds.has(entry.conversationId)) continue
       for (const field of listUnredactableConversationFields(entry))
         unredactable.push({ fragmentSha256: entry.fragmentSha256, field })
