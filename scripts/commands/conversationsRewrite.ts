@@ -11,15 +11,21 @@ import { flagValues } from '../lib/machine/cli/flagValues'
  * `--home` is explicit and repeatable rather than defaulting to `homedir()`:
  * the two Macs have to run the identical rewrite to converge, and a default
  * taken from whichever account happens to run the command is exactly how the
- * unredacted values got in. Dry by default; `--apply` publishes under the
+ * unredacted values got in. `--redact` also runs the current secret
+ * redactor over every record, for history captured under an older one; it
+ * may stand in for `--home`. Dry by default; `--apply` publishes under the
  * same lock and checks the import path uses.
  */
 export const main = async () => {
   const requestedArchive = flagValue(process.argv, '--archive')
   const homes = flagValues(process.argv, '--home')
-  if (requestedArchive === undefined || homes.length === 0) {
+  const redactSecrets = process.argv.includes('--redact')
+  if (
+    requestedArchive === undefined ||
+    (homes.length === 0 && !redactSecrets)
+  ) {
     console.error(
-      '--archive and at least one --home <absolute prefix to redact> are required',
+      '--archive and at least one --home <absolute prefix to redact>, or --redact, are required',
     )
     process.exitCode = 2
     return
@@ -30,6 +36,7 @@ export const main = async () => {
     archive: resolve(requestedArchive),
     homes,
     apply,
+    redactSecrets,
   })
   console.log(JSON.stringify(result, null, 2))
   process.exitCode = result.ok ? 0 : 1

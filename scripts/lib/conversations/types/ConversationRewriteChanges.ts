@@ -7,6 +7,8 @@ export interface ConversationRewriteChanges {
   titlesRedacted: number
   workspacesRedacted: number
   eventsRedacted: number
+  /** Records the secret redactor changed, with `redactSecrets` on. */
+  secretsRedacted: number
   /** Records still at schema 1; the writer would upgrade their event ids. */
   legacyRecords: number
 }

@@ -42,7 +42,10 @@ export const rewriteConversationArchive = async (options: {
   homes: readonly string[]
   apply: boolean
   now?: Date
+  /** Also run the current secret redactor over every record. */
+  redactSecrets?: boolean
 }): Promise<ConversationRewriteResult> => {
+  const redactSecrets = options.redactSecrets ?? false
   const homes = [...new Set(options.homes)].toSorted((left, right) =>
     left.localeCompare(right),
   )
@@ -54,6 +57,7 @@ export const rewriteConversationArchive = async (options: {
     titlesRedacted: 0,
     workspacesRedacted: 0,
     eventsRedacted: 0,
+    secretsRedacted: 0,
     legacyRecords: 0,
   })
   const finish = (
@@ -81,7 +85,7 @@ export const rewriteConversationArchive = async (options: {
   const mergedFrom = await readArchiveRevision(options.archive)
   const planned = count()
   const preview = await streamConversationExport(options.archive, (record) => {
-    rewriteConversationRecord(record, homes, planned)
+    rewriteConversationRecord(record, homes, planned, redactSecrets)
   })
   if (preview.errors.length > 0)
     return finish(
@@ -106,6 +110,7 @@ export const rewriteConversationArchive = async (options: {
         record,
         homes,
         applied,
+        redactSecrets,
       )
       if (store.replace(rewritten) !== 'added') repeated.push(record.id)
     })
@@ -145,7 +150,7 @@ export const rewriteConversationArchive = async (options: {
           const verified = await streamConversationExport(
             temporary,
             (record) => {
-              rewriteConversationRecord(record, homes, again)
+              rewriteConversationRecord(record, homes, again, redactSecrets)
             },
           )
           const problems = [

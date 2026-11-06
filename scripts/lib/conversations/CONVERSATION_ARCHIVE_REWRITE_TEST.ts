@@ -29,6 +29,7 @@ void test('a dry run counts what would change and leaves the archive byte for by
     titlesRedacted: 1,
     workspacesRedacted: 1,
     eventsRedacted: 1,
+    secretsRedacted: 0,
     legacyRecords: 0,
   })
   assert.deepEqual(await fs.readFile(archive), before)
@@ -201,4 +202,51 @@ void test('a partial export stays partial after the rewrite', async (context) =>
   const [rewrittenPartial] = after.records
   assert.ok(rewrittenPartial)
   assert.equal(rewrittenPartial.workspace, '[HOME]/p')
+})
+
+void test('--redact runs the secret redactor over history and keeps everything else', async (context) => {
+  const root = await createConversationScratchDirectory(
+    context,
+    'conversation-rewrite-redact-',
+  )
+  const archive = join(root, 'archive.jsonl')
+  // Assembled at run time so the file holds no scanner-shaped string.
+  const secret = 'sk_' + 'live_' + 'aB3dE5fG7hJ9kL2mN4pQ6rS8'
+  const leaked = createConversationFragment({ id: 'leaked', events: 2 })
+  const records: ConversationRecord[] = [
+    {
+      ...leaked,
+      events: leaked.events.map((event, index) => ({
+        ...event,
+        text: index === 0 ? `the key is ${secret}` : event.text,
+      })),
+    },
+    createConversationFragment({ id: 'clean', events: 2 }),
+  ]
+  await writeConversationExport(records, archive)
+  const applied = await rewriteConversationArchive({
+    archive,
+    homes: [],
+    apply: true,
+    redactSecrets: true,
+    now: new Date('2026-11-06T12:00:00Z'),
+  })
+  assert.deepEqual(applied.errors, [])
+  assert.equal(applied.changes.secretsRedacted, 1)
+  assert.equal(applied.changes.changed, 1)
+  const { records: rewritten, errors } = await readConversationExport(archive)
+  assert.deepEqual(errors, [])
+  assert.equal(rewritten.length, 2)
+  const after = rewritten.find((record) => record.id === 'leaked')
+  assert.ok(after)
+  assert.equal(after.events[0]?.text, 'the key is [REDACTED:token]')
+  assert.deepEqual(
+    after.events.map((event) => event.id),
+    leaked.events.map((event) => event.id),
+  )
+  assert.equal(after.provenance.contentSha256, leaked.provenance.contentSha256)
+  assert.deepEqual(
+    rewritten.find((record) => record.id === 'clean'),
+    records[1],
+  )
 })

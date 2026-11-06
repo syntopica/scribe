@@ -1,10 +1,12 @@
 import { canonicalConversationRelativePaths } from './canonicalConversationRelativePaths'
 import { redactConversationHome } from './redactConversationHome'
+import { redactConversationRecord } from './redactConversationRecord'
 import type { ConversationRecord } from './types/ConversationRecord'
 import type { ConversationRewriteChanges } from './types/ConversationRewriteChanges'
 
 /**
- * The two repairs the archived records need, applied to one record.
+ * The two repairs the archived records need, applied to one record, and on
+ * request a third: the current secret redactor over every stored text.
  *
  * Both change stored values that no capture will revisit: the 5,121 records
  * whose `workspace` still names the real home came from a recovery tree that
@@ -24,6 +26,7 @@ export const rewriteConversationRecord = (
   record: ConversationRecord,
   homes: readonly string[],
   changes: ConversationRewriteChanges,
+  redactSecrets = false,
 ): { record: ConversationRecord; changed: boolean } => {
   changes.records++
   if (record.schemaVersion !== 2) changes.legacyRecords++
@@ -37,10 +40,14 @@ export const rewriteConversationRecord = (
     changes.pathBytesSaved += joined.length - relativePath.join(',').length
   }
 
-  const redacted = [...homes]
+  const homeless = [...homes]
     .filter((home) => home.length > 1)
     .toSorted((left, right) => right.length - left.length)
     .reduce((current, home) => redactConversationHome(current, home), record)
+  // The capture redactor, run again over history: it returns the same object
+  // when it finds nothing, so a clean record stays byte for byte.
+  const redacted = redactSecrets ? redactConversationRecord(homeless) : homeless
+  if (redacted !== homeless) changes.secretsRedacted++
   const titleChanged = redacted.title !== record.title
   const workspaceChanged = redacted.workspace !== record.workspace
   const eventsChanged = redacted.events.filter(
@@ -51,7 +58,11 @@ export const rewriteConversationRecord = (
   changes.eventsRedacted += eventsChanged
 
   const changed =
-    pathChanged || titleChanged || workspaceChanged || eventsChanged > 0
+    pathChanged ||
+    titleChanged ||
+    workspaceChanged ||
+    eventsChanged > 0 ||
+    redacted !== homeless
   if (changed) changes.changed++
   return {
     changed,
