@@ -217,3 +217,26 @@ void test('a new capture version invalidates every cached artifact', async (cont
   assert.equal(metrics.cacheHits, 0)
   assert.equal(metrics.fullyParsed, 1)
 })
+
+void test('a byte budget splits a capture into segments before any count bound', async (context) => {
+  const { home, root, statePath } =
+    await createConversationCaptureInstallation(context)
+  await writeClaudeConversationArtifact({ home, session: 's1', turns: 4 })
+  await writeClaudeConversationArtifact({ home, session: 's2', turns: 2 })
+
+  const result = await publishConversationCapture({
+    home,
+    root,
+    statePath,
+    sources: CONVERSATION_CAPTURE_FIXTURE_SOURCES,
+    createdAt: '2026-09-01T09:00:00.000Z',
+    byteLimit: 1,
+  })
+  assert.equal(result.metrics.ok, true)
+  assert.equal(result.metrics.fragmentsAppended, 2)
+  assert.deepEqual(
+    result.segments.map((segment) => segment.fragments),
+    [1, 1],
+  )
+  assert.equal(result.counts.conversations, 2)
+})

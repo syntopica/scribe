@@ -1,5 +1,6 @@
 import { join } from 'node:path'
 import { captureConversationArtifactsIncrementally } from './captureConversationArtifactsIncrementally'
+import { CONVERSATION_SEGMENT_BYTE_LIMIT } from './constants/CONVERSATION_SEGMENT_BYTE_LIMIT'
 import { CONVERSATION_SEGMENT_FRAGMENT_LIMIT } from './constants/CONVERSATION_SEGMENT_FRAGMENT_LIMIT'
 import { conversationCaptureVersionStamp } from './conversationCaptureVersionStamp'
 import { conversationHostLabel } from './conversationHostLabel'
@@ -8,6 +9,7 @@ import { materializeConversations } from './materializeConversations'
 import { openConversationArchiveState } from './openConversationArchiveState'
 import { publishConversationSegment } from './publishConversationSegment'
 import { readConversationArchiveGeneration } from './readConversationArchiveGeneration'
+import { serializeCanonicalConversationRecord } from './serializeCanonicalConversationRecord'
 import { serializeConversationSegment } from './serializeConversationSegment'
 import type { ConversationRecord } from './types/ConversationRecord'
 import type { ConversationSource } from './types/ConversationSource'
@@ -49,6 +51,7 @@ export const publishConversationCapture = async (options: {
   sources?: ReadonlySet<ConversationSource>
   createdAt: string
   fragmentLimit?: number
+  byteLimit?: number
   host?: string
 }) => {
   const { generation, segments } = await readConversationArchiveGeneration(
@@ -63,7 +66,9 @@ export const publishConversationCapture = async (options: {
   try {
     const host = options.host ?? conversationHostLabel()
     const limit = options.fragmentLimit ?? CONVERSATION_SEGMENT_FRAGMENT_LIMIT
+    const byteLimit = options.byteLimit ?? CONVERSATION_SEGMENT_BYTE_LIMIT
     const staged = new Map<string, ConversationRecord>()
+    let stagedBytes = 0
     const published: {
       sha256: string
       published: boolean
@@ -83,6 +88,7 @@ export const publishConversationCapture = async (options: {
     const flush = async () => {
       const fragments = [...staged.values()]
       staged.clear()
+      stagedBytes = 0
       if (fragments.length === 0) return
       fragmentsAppended += fragments.length
       const result = await withArchiveWriteLock(
@@ -134,6 +140,8 @@ export const publishConversationCapture = async (options: {
             if (observed.every((host) => known.includes(host))) continue
           }
           staged.set(hash, record)
+          stagedBytes += serializeCanonicalConversationRecord(record).length
+          if (stagedBytes >= byteLimit) await flush()
         }
         if (fingerprint !== undefined) {
           rows.push({ key, fingerprint, fragmentHashes: hashes })
