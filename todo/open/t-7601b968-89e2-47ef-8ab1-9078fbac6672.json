@@ -1,0 +1,10 @@
+{
+  "tadu": 2,
+  "id": "t-7601b968-89e2-47ef-8ab1-9078fbac6672",
+  "title": "A capture publishes at most 2,000 fragments per segment",
+  "state": "blocked",
+  "category": "conversations-export",
+  "type": "untriaged",
+  "priority": "untriaged",
+  "blocker": "(`CONVERSATION_SEGMENT_FRAGMENT_LIMIT`). The bound exists because staged fragments live in memory: at 25,000 artifacts in one segment, peak RSS reached 602 MB and the segment was 44 MB. The number is a guess informed by one measurement; revisit it when the first real seeding pass runs. **Blocked on:** that first real seeding pass (v2 stage 3)."
+}

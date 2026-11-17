@@ -1,0 +1,10 @@
+{
+  "tadu": 2,
+  "id": "t-3a76c389-0761-4c65-8adf-8456ff2405ea",
+  "title": "Trae and Windsurf contribute no dialogue. Answered in agents' `TODO_LOG.md`",
+  "state": "blocked",
+  "category": "conversations-export",
+  "type": "untriaged",
+  "priority": "untriaged",
+  "blocker": "(2026-08-31): Trae keeps it in `Library/Application Support/Trae/ModularData/ai-agent/database.db`, which has no SQLite header and is opaque at rest, so an exporter is blocked on decryption; Windsurf has no local dialogue store at all (Cascade history is server-side). The bogus Trae records from VS Code picker state were fixed the same day. **Blocked on:** a way to decrypt Trae's store; Windsurf needs a server-side export, if any exists."
+}

@@ -1,0 +1,12 @@
+{
+  "tadu": 2,
+  "id": "t-c8ba7ab3-1de5-4076-af9a-8d0b36bc4ccb",
+  "title": "`erase plan`, `apply`, `verify` and the known-value audit need a 16 GB heap on the full archive (2026-11-06)",
+  "state": "pending",
+  "category": "conversations-export",
+  "type": "untriaged",
+  "priority": "untriaged",
+  "notes": [
+    "Observation: each ran with `NODE_OPTIONS=--max-old-space-size=16384`, 3-5 GB resident and 45-50 minutes per step on 86,962 fragments; the default heap runs out. Next step: stream the known-value pre-pass instead of holding every planned fragment, then measure one plan with the default heap."
+  ]
+}

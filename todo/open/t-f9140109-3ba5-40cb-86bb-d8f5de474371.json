@@ -1,0 +1,12 @@
+{
+  "tadu": 2,
+  "id": "t-f9140109-3ba5-40cb-86bb-d8f5de474371",
+  "title": "the archive backup is written beside the archive, so Backblaze uploads 8 GiB again after every apply (2026-10-27)",
+  "state": "pending",
+  "category": "conversations-export",
+  "type": "untriaged",
+  "priority": "untriaged",
+  "notes": [
+    "Observation: each atrium refresh (~every 80-90 min) runs `run-conversations-import --apply`, which copies `wiki/conversations/archive.jsonl` to `archive.jsonl.backup-<stamp>` in the same directory (`backupConversationArchive.ts`) and prunes the previous one; Backblaze can exclude only directories or extensions, so it re-uploads and stages the full copy each time. Smallest step: an optional backup directory (flag or env) that atrium-refresh points at a Backblaze-excluded path such as `~/.cache/scribe-archive-backups`, with `pruneConversationArchiveBackups` reading the same directory."
+  ]
+}

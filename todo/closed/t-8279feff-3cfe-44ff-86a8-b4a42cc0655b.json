@@ -1,0 +1,14 @@
+{
+  "tadu": 2,
+  "id": "t-8279feff-3cfe-44ff-86a8-b4a42cc0655b",
+  "title": "Preserve observed-host provenance",
+  "state": "done",
+  "category": "markdown-export",
+  "type": "untriaged",
+  "priority": "untriaged",
+  "closed": "2026-10-21",
+  "result": "Render optional hosts as an escaped YAML frontmatter array; leave records with unknown hosts unchanged. Keep the legacy raw mirror until cross-host coverage parity is established.",
+  "evidence": [
+    "`pnpm exec tsx --test scripts/lib/conversations/CONVERSATION_HOSTS_TEST.ts scripts/lib/conversations/CONVERSATION_RENDER_TEST.ts`; host export and rendering fixtures pass."
+  ]
+}

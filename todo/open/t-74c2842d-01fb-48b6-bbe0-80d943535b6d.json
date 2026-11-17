@@ -1,0 +1,21 @@
+{
+  "tadu": 2,
+  "id": "t-74c2842d-01fb-48b6-bbe0-80d943535b6d",
+  "title": "State builds commit one row at a time. Observation:",
+  "state": "pending",
+  "category": "conversations-export",
+  "type": "untriaged",
+  "priority": "untriaged",
+  "notes": [
+    "rebuilding the disposable state of the real archive (57,181 conversations) took",
+    "about 2h40 on a USB exFAT disk (about 28 ms per commit), and the full",
+    "`recovery-drill` there cannot finish in 10h (2026-10-18). Evidence (Codex",
+    "review): fragments commit once per segment (`ConversationArchiveState.ts:129`),",
+    "but materialized records (`:198`) and pending deliveries (`:304`) autocommit",
+    "per row, about 114k commits per build; no journal or synchronous pragma is set;",
+    "the drill prints nothing until its final JSON (`runRecoveryDrillStep.ts:12`).",
+    "Next step: batch materialize and pending writes into bounded transactions, and",
+    "have the drill log each step's start and end on stderr; then measure one",
+    "rebuild again."
+  ]
+}

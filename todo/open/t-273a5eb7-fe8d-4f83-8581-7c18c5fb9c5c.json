@@ -1,0 +1,12 @@
+{
+  "tadu": 2,
+  "id": "t-273a5eb7-fe8d-4f83-8581-7c18c5fb9c5c",
+  "title": "an interrupted import leaks its 8 GB temporary capture store (2026-10-31)",
+  "state": "pending",
+  "category": "conversations-export",
+  "type": "untriaged",
+  "priority": "untriaged",
+  "notes": [
+    "Observation: `importConversationExport.ts:22` creates `$TMPDIR/rocket-agents-conversation-import-*/capture.sqlite`; a run killed mid-merge never reaches its cleanup, and nothing removes it later. On the MacBook `rocket-agents-conversation-import-D7qHpg` (8220 MB, 2026-10-28, no open handles) sat for three days while the disk fell to 17 GB free; it was deleted by hand. Each live run also needs about 23 GB of temporary space (7.7 GB capture plus 15 GB in `rocket-agents-conversations.*`). On 2026-10-31 the hourly `com.cristian.atrium-refresh` ran a full import on the MacBook at about 16:13, 19:33 and 21:45 UTC, each taking free disk from about 40-50 GB down to 16-26 GB for 15-25 minutes, now under `~/p/wiki/atrium/tmp` (8 GB capture plus a 6.5 GB `slice.jsonl`). Smallest step: at import start, remove `rocket-agents-conversation-import-*` directories older than a day that no process holds, as `removeAbandonedArchiveTemporaries` already does for archive temporaries."
+  ]
+}

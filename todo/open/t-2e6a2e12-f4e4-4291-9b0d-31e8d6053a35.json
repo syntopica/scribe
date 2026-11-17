@@ -1,0 +1,19 @@
+{
+  "tadu": 2,
+  "id": "t-2e6a2e12-f4e4-4291-9b0d-31e8d6053a35",
+  "title": "Tool invocations still reach the archive as assistant text: a line",
+  "state": "pending",
+  "category": "event-classification",
+  "type": "untriaged",
+  "priority": "untriaged",
+  "notes": [
+    "    `tool: <Name>` (`extractConversationObjectText.ts:11`), either alone or",
+    "    closing the prose that announced it. Atrium matches that exact text since",
+    "    atrium `750ae09`/`5552415` to drop the call and the unmarked `role: \"user\"`",
+    "    results archived before `199f393`: 759,708 calls and 692,868 results, 78%",
+    "    of raw records, measured 2026-10-14. The line is now an undeclared",
+    "    contract; changing its wording silently readmits every archived result.",
+    "    Smallest step: pin it in the archive-contract fixture's description, or",
+    "    emit a `kind: \"tool-call\"` event for new captures and tell Atrium."
+  ]
+}

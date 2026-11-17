@@ -1,0 +1,18 @@
+{
+  "tadu": 2,
+  "id": "t-86acba67-ddc8-443e-8de3-3409d5430b52",
+  "title": "2026-10-11 - The Mac mini's unredacted 2026-08-31 recovery snapshot",
+  "state": "done",
+  "category": "general",
+  "type": "untriaged",
+  "priority": "untriaged",
+  "notes": [
+    "    (`~/p/wiki/conversations/snapshots/2026-08-31-post-mempalace-recovery/`,",
+    "    one 3.36 GB `archive.jsonl`, gitignored, no open handles) was moved to the",
+    "    mini's Trash with `trash` on the owner's go-ahead; recoverable until the",
+    "    Trash is emptied."
+  ],
+  "closed": "2026-11-17",
+  "result": "2026-10-11 - The Mac mini's unredacted 2026-08-31 recovery snapshot",
+  "evidence": ["legacy item migrated to format 2 without a recorded evidence"]
+}

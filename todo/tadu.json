@@ -1,0 +1,9 @@
+{
+  "tadu": 2,
+  "categories": {
+    "conversations-export": "Conversations export",
+    "event-classification": "Event classification",
+    "general": "General",
+    "markdown-export": "Markdown export"
+  }
+}
