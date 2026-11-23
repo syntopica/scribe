@@ -1,10 +1,14 @@
 {
   "tadu": 2,
   "id": "t-3a76c389-0761-4c65-8adf-8456ff2405ea",
-  "title": "Trae and Windsurf contribute no dialogue. Answered in agents' `TODO_LOG.md`",
+  "title": "Trae and Windsurf export no dialogue: Trae store is encrypted, Windsurf history is server-side",
   "state": "blocked",
   "category": "conversations-export",
-  "type": "untriaged",
-  "priority": "untriaged",
-  "blocker": "(2026-08-31): Trae keeps it in `Library/Application Support/Trae/ModularData/ai-agent/database.db`, which has no SQLite header and is opaque at rest, so an exporter is blocked on decryption; Windsurf has no local dialogue store at all (Cascade history is server-side). The bogus Trae records from VS Code picker state were fixed the same day. **Blocked on:** a way to decrypt Trae's store; Windsurf needs a server-side export, if any exists."
+  "type": "feature",
+  "priority": "low",
+  "kind": "waiting",
+  "blocker": "(2026-08-31): Trae keeps it in `Library/Application Support/Trae/ModularData/ai-agent/database.db`, which has no SQLite header and is opaque at rest, so an exporter is blocked on decryption; Windsurf has no local dialogue store at all (Cascade history is server-side). The bogus Trae records from VS Code picker state were fixed the same day. **Blocked on:** a way to decrypt Trae's store; Windsurf needs a server-side export, if any exists.",
+  "notes": [
+    "2026-11-24 audit: unchanged and still blocked. scribe lists trae and windsurf in constants/CONVERSATION_SOURCES.ts but no decryption or server-export code exists (only commit f65ea63 mentions them). Trae app data dir is absent on this machine now (ls of ~/Library/Application Support shows no Trae or Windsurf), so the encrypted-store claim cannot be re-verified here. Smallest next step: install Trae and check whether database.db is still headerless; otherwise leave low priority."
+  ]
 }

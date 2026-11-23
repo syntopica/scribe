@@ -1,11 +1,12 @@
 {
   "tadu": 2,
   "id": "t-2e6a2e12-f4e4-4291-9b0d-31e8d6053a35",
-  "title": "Tool invocations still reach the archive as assistant text: a line",
+  "title": "Pin the \"tool: <Name>\" assistant-text line as a documented contract in the archive fixture, or emit kind tool-call events for new captures",
   "state": "pending",
   "category": "event-classification",
-  "type": "untriaged",
-  "priority": "untriaged",
+  "type": "docs",
+  "priority": "normal",
+  "kind": "task",
   "notes": [
     "    `tool: <Name>` (`extractConversationObjectText.ts:11`), either alone or",
     "    closing the prose that announced it. Atrium matches that exact text since",
@@ -14,6 +15,7 @@
     "    of raw records, measured 2026-10-14. The line is now an undeclared",
     "    contract; changing its wording silently readmits every archived result.",
     "    Smallest step: pin it in the archive-contract fixture's description, or",
-    "    emit a `kind: \"tool-call\"` event for new captures and tell Atrium."
+    "    emit a `kind: \"tool-call\"` event for new captures and tell Atrium.",
+    "2026-11-24 audit: still not done. extractConversationObjectText.ts:11 still pushes `tool: ${name}`; no docs/AGENTS/fixture text mentions the line (grep clean); fixtures/archive-contract/v2 only shows kind tool-call/tool-result events, not the text form. Atrium atrium/ingest/is_rendered_tool_call.py still matches r\"tool: [A-Za-z0-9_.:-]+(\\n|$)\" for role assistant. Smallest next step: document the exact line format in the archive-contract fixture description (or add a fixture record using it), and note in the Atrium file that scribe owns it."
   ]
 }

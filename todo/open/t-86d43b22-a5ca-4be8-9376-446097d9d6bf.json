@@ -1,12 +1,14 @@
 {
   "tadu": 2,
   "id": "t-86d43b22-a5ca-4be8-9376-446097d9d6bf",
-  "title": "an escaped encrypted key keeps its body after `Proc-Type:` (2026-11-06)",
+  "title": "Escaped encrypted PEM key keeps DEK-Info line and body after \"Proc-Type:\" in ESCAPED_PRIVATE_KEY_PATTERN",
   "state": "pending",
   "category": "conversations-export",
-  "type": "untriaged",
-  "priority": "untriaged",
+  "type": "bug",
+  "priority": "low",
+  "kind": "task",
   "notes": [
-    "Observation: `ESCAPED_PRIVATE_KEY_PATTERN` stops at the space after `Proc-Type:` in a key escaped onto one line (`-----\\\\nProc-Type: 4,ENCRYPTED\\\\nDEK-Info: ...`), leaving the DEK-Info line and the body; Atrium fixed its copy in `94f3425` by matching the two headers first. Evidence: 0 such keys in the archive or in segment generation `02f92e0d` (rg, 2026-11-06), so the redaction of that day did not need it; adding the header alternative here fails `sonarjs/regex-complexity` (22 > 20). Next step: match headers outside the regex, as `isPrivateKeyMaterial` does, and add the Atrium test `test_an_escaped_encrypted_key_goes_with_its_headers`."
+    "Observation: `ESCAPED_PRIVATE_KEY_PATTERN` stops at the space after `Proc-Type:` in a key escaped onto one line (`-----\\\\nProc-Type: 4,ENCRYPTED\\\\nDEK-Info: ...`), leaving the DEK-Info line and the body; Atrium fixed its copy in `94f3425` by matching the two headers first. Evidence: 0 such keys in the archive or in segment generation `02f92e0d` (rg, 2026-11-06), so the redaction of that day did not need it; adding the header alternative here fails `sonarjs/regex-complexity` (22 > 20). Next step: match headers outside the regex, as `isPrivateKeyMaterial` does, and add the Atrium test `test_an_escaped_encrypted_key_goes_with_its_headers`.",
+    "2026-11-24 audit: still open. scripts/lib/conversations/constants/ESCAPED_PRIVATE_KEY_PATTERN.ts unchanged (body class [A-Za-z0-9+/=] and \\\\+[rn] stops at the space after Proc-Type:); no header handling there. Atrium counterpart already has test_an_escaped_encrypted_key_goes_with_its_headers (p/atrium/tests/test_vendor_token_redaction.py:270). Prior evidence: 0 such keys in archive, so low impact. Next: strip Proc-Type/DEK-Info headers outside the regex as isPrivateKeyMaterial.ts does, add a test in CONVERSATION_REDACTION_PATTERNS_TEST.ts."
   ]
 }

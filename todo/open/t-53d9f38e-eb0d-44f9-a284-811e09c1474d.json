@@ -1,11 +1,15 @@
 {
   "tadu": 2,
   "id": "t-53d9f38e-eb0d-44f9-a284-811e09c1474d",
-  "title": "JSONL suffix resume is deliberately unbuilt. A changed artifact is",
+  "title": "Build JSONL suffix resume only if a real artifact misses the 22.691 s changed-pass bound (none has; deliberately unbuilt)",
   "state": "blocked",
   "category": "conversations-export",
-  "type": "untriaged",
-  "priority": "untriaged",
-  "blocker": "recaptured whole. Measured at 25,000 artifacts the changed pass costs 1.72s against a 22.691s bound, so the checkpoint machinery - prefix chunk hashes, a cached normalized accumulator, an incomplete-tail boundary - is correctness surface nobody is paying for yet. Build it when a real artifact misses the bound, not before. **Blocked on:** a real artifact missing the 22.691 s bound; none has (re-checked 2026-09-09, the changed pass measures 1.72 s).",
-  "unblock": "A measured miss."
+  "type": "perf",
+  "priority": "low",
+  "kind": "later",
+  "blocker": "No real artifact has missed the 22.691 s changed-pass bound; build only after a measured miss",
+  "unblock": "A measured miss.",
+  "notes": [
+    "2026-11-24 audit: still deliberately unbuilt; no suffix-resume code exists, and the doc comment in scripts/lib/conversations/captureConversationArtifactsIncrementally.ts (lines 28-30) records the decision (whole-artifact recapture on a miss). Nothing in src changed since 2026-09-09. The 1.72 s measurement was not re-run (no heavy commands). Next step: none until a measured miss; re-measure on check."
+  ]
 }

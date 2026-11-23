@@ -1,12 +1,14 @@
 {
   "tadu": 2,
   "id": "t-f9140109-3ba5-40cb-86bb-d8f5de474371",
-  "title": "the archive backup is written beside the archive, so Backblaze uploads 8 GiB again after every apply (2026-10-27)",
+  "title": "Add an optional backup directory to the conversation archive import so Backblaze does not re-upload the 8 GiB backup after every refresh",
   "state": "pending",
   "category": "conversations-export",
-  "type": "untriaged",
-  "priority": "untriaged",
+  "type": "perf",
+  "priority": "normal",
+  "kind": "task",
   "notes": [
-    "Observation: each atrium refresh (~every 80-90 min) runs `run-conversations-import --apply`, which copies `wiki/conversations/archive.jsonl` to `archive.jsonl.backup-<stamp>` in the same directory (`backupConversationArchive.ts`) and prunes the previous one; Backblaze can exclude only directories or extensions, so it re-uploads and stages the full copy each time. Smallest step: an optional backup directory (flag or env) that atrium-refresh points at a Backblaze-excluded path such as `~/.cache/scribe-archive-backups`, with `pruneConversationArchiveBackups` reading the same directory."
+    "Observation: each atrium refresh (~every 80-90 min) runs `run-conversations-import --apply`, which copies `wiki/conversations/archive.jsonl` to `archive.jsonl.backup-<stamp>` in the same directory (`backupConversationArchive.ts`) and prunes the previous one; Backblaze can exclude only directories or extensions, so it re-uploads and stages the full copy each time. Smallest step: an optional backup directory (flag or env) that atrium-refresh points at a Backblaze-excluded path such as `~/.cache/scribe-archive-backups`, with `pruneConversationArchiveBackups` reading the same directory.",
+    "2026-11-24 audit: not done. backupConversationArchive.ts still writes join(dirname(archive), ...backup-<stamp>) with no dir option; prune and importConversationExport use the same dir; no backup-dir flag or env in scribe. atrium/bin/atrium-refresh (lines ~57) still prunes \"$archive\".backup-* beside the archive and passes no backup path. Next: add optional --backup-dir/env to scribe import (backup + prune read same dir), then point atrium-refresh at ~/.cache/scribe-archive-backups and update its prune glob."
   ]
 }

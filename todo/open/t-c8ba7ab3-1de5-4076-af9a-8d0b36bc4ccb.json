@@ -1,12 +1,14 @@
 {
   "tadu": 2,
   "id": "t-c8ba7ab3-1de5-4076-af9a-8d0b36bc4ccb",
-  "title": "`erase plan`, `apply`, `verify` and the known-value audit need a 16 GB heap on the full archive (2026-11-06)",
+  "title": "Measure erase plan/apply/verify and the known-value audit with the default heap; fix residual memory growth if any still needs 16 GB",
   "state": "pending",
   "category": "conversations-export",
-  "type": "untriaged",
-  "priority": "untriaged",
+  "type": "perf",
+  "priority": "normal",
+  "kind": "task",
   "notes": [
-    "Observation: each ran with `NODE_OPTIONS=--max-old-space-size=16384`, 3-5 GB resident and 45-50 minutes per step on 86,962 fragments; the default heap runs out. Next step: stream the known-value pre-pass instead of holding every planned fragment, then measure one plan with the default heap."
+    "Observation: each ran with `NODE_OPTIONS=--max-old-space-size=16384`, 3-5 GB resident and 45-50 minutes per step on 86,962 fragments; the default heap runs out. Next step: stream the known-value pre-pass instead of holding every planned fragment, then measure one plan with the default heap.",
+    "2026-11-24 audit: verdict partial/unclear. Code read: planConversationArchiveErasureFromRoot already reads segments one at a time keeping only conversationId+fragment hash, and collectKnownSecretValues streams per segment keeping a Set of values (not planned fragments), so the \"stream the pre-pass\" step looks already true; no commit since 2026-11-06 touches these (last: 9e98be5, 5990299 perf of verify matcher). No doc or script sets max-old-space-size. Remaining memory sources unverified: Set of known values (~10k) and verify/apply holding a generation. Smallest next step: on the full archive run one `scribe erase plan` with the default heap and record peak RSS; if it fits, close, else profile apply/verify. Not run here (heavy)."
   ]
 }

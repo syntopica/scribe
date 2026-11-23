@@ -1,11 +1,12 @@
 {
   "tadu": 2,
   "id": "t-74c2842d-01fb-48b6-bbe0-80d943535b6d",
-  "title": "State builds commit one row at a time. Observation:",
+  "title": "Measure one disposable-state rebuild of the real archive now that writes are batched and the drill logs each step",
   "state": "pending",
   "category": "conversations-export",
-  "type": "untriaged",
-  "priority": "untriaged",
+  "type": "perf",
+  "priority": "normal",
+  "kind": "task",
   "notes": [
     "rebuilding the disposable state of the real archive (57,181 conversations) took",
     "about 2h40 on a USB exFAT disk (about 28 ms per commit), and the full",
@@ -16,6 +17,7 @@
     "the drill prints nothing until its final JSON (`runRecoveryDrillStep.ts:12`).",
     "Next step: batch materialize and pending writes into bounded transactions, and",
     "have the drill log each step's start and end on stderr; then measure one",
-    "rebuild again."
+    "rebuild again.",
+    "2026-11-24 audit: batching landed in 4f6c38f (materialize and pending writes via transaction() in ConversationArchiveState.ts, bounded transactions); drill logs each step start/end via logRecoveryDrillStep in runRecoveryDrillStep.ts; integrity check made daily in 90ad864. Left: one real rebuild timing on the archive (needs the USB disk/owner machine, not verified here). Next: run the rebuild, record duration vs the old 2h40."
   ]
 }

@@ -1,11 +1,12 @@
 {
   "tadu": 2,
   "id": "t-298e8055-4955-4a2c-8372-024ab0f48987",
-  "title": "Segment archive, stage 2 (`8cc2849`). Landed: atomic content-addressed",
+  "title": "Segment archive v2 stage 3: close the open checks (full-size drill, Atrium test-index parity, multi-installation transport) and record the live cutover",
   "state": "in_progress",
   "category": "conversations-export",
-  "type": "untriaged",
-  "priority": "untriaged",
+  "type": "feature",
+  "priority": "normal",
+  "kind": "task",
   "notes": [
     "publication (temp write, file fsync, hard link, directory fsync), the",
     "generation manifest and its base sentinel, one disposable SQLite state holding",
@@ -59,6 +60,7 @@
     "(~22.5 GiB) holds there, re-measure on every holder at preflight.",
     "Decided 2026-10-11 (owner, relayed by the coordinator): segments in",
     "`$SYNTOPICA_DATA/conversations/segments/`; state, locks and the freeze",
-    "sentinel in `~/.local/state/rocket-agents/conversations/`. Final."
+    "sentinel in `~/.local/state/rocket-agents/conversations/`. Final.",
+    "2026-11-24 audit: Most of stage 3 is landed in scribe: erase plan|apply|verify|activate (9165eed), segments-receive/seed-generation (3d4f2fb), freeze sentinel refusal (a3b8a34), recovery-drill (7a33cdb), real-archive parity rehearsal 57,181/57,181 (d129b51). A live segment root now exists (the old note saying none exists is stale): ~/p/wiki/conversations/segments/ holds two generations, current-generation.json updated 2026-11-07, and ~/.local/state/rocket-agents/conversations/segment-mode is present, so cutover appears to have happened. Docs plan docs/plans/2026-10-11-segment-archive-v2-stage-3.md was last touched 2026-10-18 and still has one unchecked item (rebuild a test Atrium index from export-materialized and compare with the live index) and still lists the full-size drill and four-installation transport test as open; the plan was not updated after cutover. Not verified: Atrium/dotfiles commits, other holders. Next: confirm with owner/Atrium whether those three checks were done, tick the plan, then close; the 2,000-fragment limit task is tied to the first real seeding pass, now past."
   ]
 }
