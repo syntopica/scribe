@@ -32,6 +32,22 @@ void test('a JSON-escaped private key is redacted', () => {
   assert.ok(redacted.includes('[REDACTED:private-key]'))
 })
 
+void test('an escaped encrypted private key goes with its headers', () => {
+  const body = 'MII' + ALNUM.slice(0, 60)
+  const iv = 'A1B2C3D4E5F60718'
+  const text =
+    '"key": "-----BEGIN RSA ' +
+    'PRIVATE KEY-----\\nProc-Type: 4,ENCRYPTED\\nDEK-Info: AES-128-CBC,' +
+    iv +
+    '\\n\\n' +
+    body +
+    '\\n-----END RSA PRIVATE KEY-----\\n", "client_email": "bot@example.com"'
+  const redacted = redactSensitiveText(text).text
+  for (const leaked of [body, iv, 'DEK-Info', 'Proc-Type', 'ENCRYPTED'])
+    assert.ok(!redacted.includes(leaked), redacted)
+  assert.ok(redacted.includes('"client_email": "bot@example.com"'), redacted)
+})
+
 for (const line of [
   '- Client secret: `{v}`',
   'Token API Hetzner Cloud: {v}',

@@ -2,15 +2,18 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { backupConversationArchive } from './backupConversationArchive'
+import { IMPORT_DIRECTORY_PREFIX } from './constants/IMPORT_DIRECTORY_PREFIX'
 import { ConversationArchiveChangedError } from './ConversationArchiveChangedError'
 import { ConversationCaptureStore } from './ConversationCaptureStore'
 import { loadConversationExportStore } from './loadConversationExportStore'
 import { pruneConversationArchiveBackups } from './pruneConversationArchiveBackups'
 import { readArchiveRevision } from './readArchiveRevision'
 import { removeAbandonedArchiveTemporaries } from './removeAbandonedArchiveTemporaries'
+import { removeAbandonedImportDirectories } from './removeAbandonedImportDirectories'
 import type { ConversationImportResult } from './types/ConversationImportResult'
 import { withArchiveWriteLock } from './withArchiveWriteLock'
 import { writeConversationExportFromStore } from './writeConversationExportFromStore'
+import { writeImportOwnerMarker } from './writeImportOwnerMarker'
 
 export const importConversationExport = async (options: {
   input: string
@@ -19,9 +22,10 @@ export const importConversationExport = async (options: {
   now?: Date
   migrationFrozen?: boolean
 }): Promise<ConversationImportResult> => {
-  const directory = await mkdtemp(
-    join(tmpdir(), 'rocket-agents-conversation-import-'),
-  )
+  // Before this run's own directory exists, so it can never be a candidate.
+  await removeAbandonedImportDirectories()
+  const directory = await mkdtemp(join(tmpdir(), IMPORT_DIRECTORY_PREFIX))
+  await writeImportOwnerMarker(directory)
   const store = new ConversationCaptureStore(join(directory, 'capture.sqlite'))
   try {
     // Captured before the merge and verified after it. An import reads the
