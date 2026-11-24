@@ -12,6 +12,7 @@ export const main = async () => {
     return
   }
 
+  const requestedBackupDirectory = flagValue(process.argv, '--backup-dir')
   const apply = process.argv.includes('--apply')
   const migrationFrozen = process.argv.includes('--migration-frozen')
   // A dry run writes nothing, so it stays available inside the freeze.
@@ -21,6 +22,9 @@ export const main = async () => {
     archive: resolve(requestedArchive),
     apply,
     migrationFrozen,
+    ...(requestedBackupDirectory === undefined
+      ? {}
+      : { backupDirectory: resolve(requestedBackupDirectory) }),
   })
   console.log(JSON.stringify(result, null, 2))
   process.exitCode = result.ok ? 0 : 1

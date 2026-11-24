@@ -58,6 +58,12 @@ If the archive exists, apply creates a timestamped mode-0600 backup beside it. A
 hash mismatch, invalid record, unsafe provenance path, or unsupported schema
 makes the import fail closed.
 
+`--backup-dir <directory>` writes the backup there instead, creating the
+directory if it is missing, and prunes older backups in that directory only
+(files named `<archive>.backup-<stamp>`; anything else is left alone). Use it to
+keep the multi-gigabyte copy out of a synced or backed-up tree; the copy also
+works across volumes. Unset, the backup stays beside the archive.
+
 ## Render
 
 Rendering is a dry-run by default and writes one private Markdown file per

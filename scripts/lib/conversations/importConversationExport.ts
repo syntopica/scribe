@@ -21,6 +21,8 @@ export const importConversationExport = async (options: {
   apply: boolean
   now?: Date
   migrationFrozen?: boolean
+  /** Where the backup goes and is pruned; beside the archive when unset. */
+  backupDirectory?: string
 }): Promise<ConversationImportResult> => {
   // Before this run's own directory exists, so it can never be a candidate.
   await removeAbandonedImportDirectories()
@@ -87,6 +89,7 @@ export const importConversationExport = async (options: {
           backup = await backupConversationArchive(
             options.archive,
             options.now ?? new Date(),
+            options.backupDirectory,
           )
           await writeConversationExportFromStore(
             store,
@@ -108,6 +111,7 @@ export const importConversationExport = async (options: {
             prunedBackups = await pruneConversationArchiveBackups(
               options.archive,
               backup,
+              options.backupDirectory,
             )
         },
         options.migrationFrozen,

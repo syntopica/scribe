@@ -10,13 +10,15 @@ import { basename, dirname, join } from 'node:path'
  * previous generation is what a bad apply needs to be undone; older ones are
  * the same bytes again. Only names carrying the archive's own backup prefix
  * are touched, so a lock, a temporary file, a hand-named copy or another
- * archive's backups beside it stay where they are.
+ * archive's backups beside it stay where they are. With `backupDirectory`
+ * the backups are looked for there instead of beside the archive.
  */
 export const pruneConversationArchiveBackups = async (
   archive: string,
   keep: string,
+  backupDirectory?: string,
 ) => {
-  const directory = dirname(archive)
+  const directory = backupDirectory ?? dirname(archive)
   const prefix = `${basename(archive)}.backup-`
   // The exact shape `backupConversationArchive` writes: an ISO stamp with its
   // separators replaced. A prefix match alone would also take a hand-named

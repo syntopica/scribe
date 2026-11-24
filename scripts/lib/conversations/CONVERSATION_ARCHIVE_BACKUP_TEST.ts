@@ -90,3 +90,68 @@ void test('a dry run and a first apply prune nothing', async (context) => {
   assert.equal(first.prunedBackups, undefined)
   await fs.access(stray)
 })
+
+void test('a backup directory receives the backup and the prune, and unrelated files stay', async (context) => {
+  const root = await createConversationScratchDirectory(
+    context,
+    'conversation-archive-backup-dir-',
+  )
+  const archive = join(root, 'archive.jsonl')
+  const input = join(root, 'input.jsonl')
+  const backupDirectory = join(root, 'elsewhere', 'backups')
+  await writeConversationExport([createArchiveRecord('a')], archive)
+  await writeConversationExport([createArchiveRecord('b')], input)
+
+  const beside = join(root, 'archive.jsonl.backup-2026-09-04T12-36-00-000Z')
+  await fs.writeFile(beside, '')
+  await fs.mkdir(backupDirectory, { recursive: true })
+  const stale = join(
+    backupDirectory,
+    'archive.jsonl.backup-2026-09-04T13-20-00-000Z',
+  )
+  const unrelated = [
+    join(backupDirectory, 'notes.txt'),
+    join(backupDirectory, 'archive.jsonl.backup-recovered.jsonl'),
+    join(backupDirectory, 'other.jsonl.backup-2026-09-04T13-20-00-000Z'),
+  ]
+  for (const path of [stale, ...unrelated]) await fs.writeFile(path, '')
+
+  const result = await importConversationExport({
+    input,
+    archive,
+    apply: true,
+    now: new Date('2026-09-09T10:00:00Z'),
+    backupDirectory,
+  })
+  assert.equal(result.ok, true)
+  assert.equal(
+    result.backup,
+    join(backupDirectory, 'archive.jsonl.backup-2026-09-09T10-00-00-000Z'),
+  )
+  assert.deepEqual(result.prunedBackups, [stale])
+  await fs.access(result.backup ?? '')
+  await assert.rejects(fs.access(stale))
+  for (const path of [beside, ...unrelated]) await fs.access(path)
+})
+
+void test('a missing backup directory is created', async (context) => {
+  const root = await createConversationScratchDirectory(
+    context,
+    'conversation-archive-backup-dir-new-',
+  )
+  const archive = join(root, 'archive.jsonl')
+  const input = join(root, 'input.jsonl')
+  const backupDirectory = join(root, 'a', 'b')
+  await writeConversationExport([createArchiveRecord('a')], archive)
+  await writeConversationExport([createArchiveRecord('b')], input)
+  const result = await importConversationExport({
+    input,
+    archive,
+    apply: true,
+    backupDirectory,
+  })
+  assert.equal(result.ok, true)
+  assert.deepEqual(await fs.readdir(backupDirectory), [
+    basename(result.backup ?? ''),
+  ])
+})
