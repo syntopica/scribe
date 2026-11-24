@@ -339,3 +339,14 @@ void test('a URL password is redacted in any scheme, not only http', () => {
     )
   }
 })
+
+void test('a URL without a password is left alone in any scheme', () => {
+  for (const text of [
+    'postgres://db.example.com:5432/main',
+    'redis://cache.example.com',
+    'mongodb+srv://cluster.example.net/app?retryWrites=true',
+    'see https://example.com/a and mail user@example.com',
+  ]) {
+    assert.equal(redactSensitiveText(text).text, text)
+  }
+})
