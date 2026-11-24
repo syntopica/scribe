@@ -27,7 +27,10 @@ export const redactSensitiveText = (input: string): RedactedText => {
     [/\bgh[oprsu]_[A-Za-z0-9]{20,}\b/gu, '[REDACTED:token]'],
     [/\bsk-[A-Za-z0-9_-]{20,}\b/gu, '[REDACTED:token]'],
     [/\bxox[baprs]-[A-Za-z0-9-]{10,}\b/gu, '[REDACTED:token]'],
-    [/(https?:\/\/)(?!\[REDACTED:)[^\s@]+@/giu, '$1[REDACTED:credentials]@'],
+    [
+      /\b([a-z][a-z0-9+.-]*:\/\/)(?!\[REDACTED:)[^\s@]+@/giu,
+      '$1[REDACTED:credentials]@',
+    ],
     ...VENDOR_TOKEN_PATTERNS,
   ] as const) {
     const result = applyRedactionPattern(text, pattern, replacement)

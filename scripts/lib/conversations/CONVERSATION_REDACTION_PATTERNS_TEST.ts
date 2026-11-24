@@ -326,3 +326,16 @@ void test('a key written as a JSON list of lines loses every line', () => {
   assert.ok(!redacted.includes(line), redacted)
   assert.ok(!redacted.includes(line.split('').reverse().join('')), redacted)
 })
+
+void test('a URL password is redacted in any scheme, not only http', () => {
+  const secret = 'fixture' + 'Pass' + ALNUM.slice(0, 12)
+  for (const scheme of ['postgres', 'mysql', 'redis', 'smtp', 'mongodb+srv']) {
+    const text = `connect ${scheme}://app:${secret}@db.example.com/main`
+    const redacted = redactSensitiveText(text).text
+    assert.ok(!redacted.includes(secret), redacted)
+    assert.ok(
+      redacted.includes(`${scheme}://[REDACTED:credentials]@`),
+      redacted,
+    )
+  }
+})
