@@ -1,0 +1,14 @@
+{
+  "tadu": 2,
+  "id": "t-9b6d41e9-3620-421d-84ca-646571e8dc4c",
+  "title": "ack-pending aborted on exported records over 64 MiB: the hourly refresh redid a full ingest and failed each run until the reader got a record bound",
+  "state": "pending",
+  "category": "conversations-export",
+  "type": "bug",
+  "priority": "normal",
+  "kind": "task",
+  "created": "2026-11-24",
+  "notes": [
+    "2026-11-24 mini: refresh 02:33 failed at 03:09:58 in ack-pending with 'JSONL line exceeds the 64 MiB safe size limit' (forEachLfLine <- streamConversationExport <- acknowledgeConversationSlice). materialized.jsonl has 73155 lines, largest record 85408236 bytes (conversation fef6a1c0...), four more over 32 MiB. The segment-generation marker stayed on 02f92e0d, so each hourly run repeated export-materialized plus a 24 min full ingest. The MacBook log holds 143 occurrences of the same error. Fixed in eb8955e: exports read with MAX_CONVERSATION_RECORD_BYTES (256 MiB); verified read-only on the real 12.7 GB export: 73154 records, 0 errors; pnpm run check exit 0, 281 tests. Still to confirm: a scheduled refresh reaching 'refresh done' on both hosts."
+  ]
+}
