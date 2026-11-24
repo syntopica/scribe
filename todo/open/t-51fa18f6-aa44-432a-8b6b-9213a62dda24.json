@@ -1,0 +1,14 @@
+{
+  "tadu": 2,
+  "id": "t-51fa18f6-aa44-432a-8b6b-9213a62dda24",
+  "title": "segments-seed-generation exceeds the default Node heap on the live archive: the seed aborted at 4 GB and needs --max-old-space-size",
+  "state": "pending",
+  "category": "conversations-export",
+  "type": "bug",
+  "priority": "normal",
+  "kind": "task",
+  "created": "2026-11-24",
+  "notes": [
+    "2026-11-24 on the mini (16 GB): sync-conversations macmini seed-generation staged 377 files / 19 GB, then scribe segments-seed-generation died after ~196 s with 'FATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory' (exit 134), 180 of 377 segments published, and left generations/.staging-<uuid> (9 GB) behind because the finally never ran. Rerun with NODE_OPTIONS=--max-old-space-size=9216 completed: 376 published. The first capture into the seeded generation peaked at peakRssBytes 7497990808 with the same flag (1267 s). Largest segments are 440-464 MB and are read whole. Smallest next step: stream or release each segment in seedConversationArchiveGeneration, and have sync-conversations clear an orphan .staging-* before seeding."
+  ]
+}
