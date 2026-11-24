@@ -5,9 +5,9 @@
 ## Continuous TODO, Work Log, and History Coverage
 
 Keep the active backlog and the searchable record of closed work with tadu. This
-repository keeps one JSON file per task under `todo/` (format 2, `todo/tadu.json`).
-Use `TODO_HISTORY_INDEX.jsonl`, when present, to avoid parsing unchanged
-conversations more than once.
+repository keeps one JSON file per task under `todo/` (format 2,
+`todo/tadu.json`). Use `TODO_HISTORY_INDEX.jsonl`, when present, to avoid
+parsing unchanged conversations more than once.
 
 - Never edit task files by hand. Use `tadu add` (with category, type and
   priority), `tadu set ID key=value`, `tadu claim ID --as agent:<name>` before
@@ -23,8 +23,8 @@ conversations more than once.
 - Before recording work or reopening an old task, run `tadu similar "<title>"`
   and update the existing item instead of creating a duplicate.
 - Record actionable bugs, risks, blockers, deferred work, missing tests,
-  validation, documentation, and product improvements as they are discovered.
-  A task is pending, in_progress, blocked, done or cancelled. Keep blockers open
+  validation, documentation, and product improvements as they are discovered. A
+  task is pending, in_progress, blocked, done or cancelled. Keep blockers open
   and name the smallest action required to unblock them.
 - Give a task a kind when it is clear what it is: `task` for work you can do,
   `decision` for a choice a person must make, `waiting` for something someone
