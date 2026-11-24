@@ -2,7 +2,7 @@
   "tadu": 2,
   "id": "t-9b6d41e9-3620-421d-84ca-646571e8dc4c",
   "title": "ack-pending aborted on exported records over 64 MiB: the hourly refresh redid a full ingest and failed each run until the reader got a record bound",
-  "state": "pending",
+  "state": "done",
   "category": "conversations-export",
   "type": "bug",
   "priority": "normal",
@@ -10,5 +10,10 @@
   "created": "2026-11-24",
   "notes": [
     "2026-11-24 mini: refresh 02:33 failed at 03:09:58 in ack-pending with 'JSONL line exceeds the 64 MiB safe size limit' (forEachLfLine <- streamConversationExport <- acknowledgeConversationSlice). materialized.jsonl has 73155 lines, largest record 85408236 bytes (conversation fef6a1c0...), four more over 32 MiB. The segment-generation marker stayed on 02f92e0d, so each hourly run repeated export-materialized plus a 24 min full ingest. The MacBook log holds 143 occurrences of the same error. Fixed in eb8955e: exports read with MAX_CONVERSATION_RECORD_BYTES (256 MiB); verified read-only on the real 12.7 GB export: 73154 records, 0 errors; pnpm run check exit 0, 281 tests. Still to confirm: a scheduled refresh reaching 'refresh done' on both hosts."
+  ],
+  "closed": "2026-11-24",
+  "result": "ack-pending aborted on exported records over 64 MiB: the hourly refresh redid a full ingest and failed each run until the reader got a record bound",
+  "evidence": [
+    "Scribe fix eb8955e passed both scheduled refreshes on 2026-11-24. The MacBook Pro logged refresh done at 04:38:20 CET and doctor ok at 04:38:24. The Mac mini passed ack-pending at 04:25:36, finished 9,372 embeddings, logged refresh done at 09:30:10 and doctor ok at 09:30:28, and exited 0 in launchd. The Mac mini archive-generation check passed. Its archive_stale warning was nonblocking."
   ]
 }
