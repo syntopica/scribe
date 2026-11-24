@@ -9,6 +9,9 @@ export const forEachLfLine = async (
   // is on disk: reassembling the bytes from the lines loses the distinction
   // between a final line that is terminated and one that is not.
   consumeChunk?: (chunk: string) => void,
+  // Provider files keep the per-file bound; a reader of scribe's own exports
+  // passes the larger record bound.
+  maxLineBytes: number = MAX_CONVERSATION_FILE_BYTES,
 ) => {
   const handle = await fs.open(path, constants.O_RDONLY | constants.O_NOFOLLOW)
   // The unterminated tail is kept as the pieces it arrived in and joined once,
@@ -42,8 +45,10 @@ export const forEachLfLine = async (
         carry.push(rest)
         carryBytes += Buffer.byteLength(rest)
       }
-      if (carryBytes > MAX_CONVERSATION_FILE_BYTES) {
-        throw new Error('JSONL line exceeds the 64 MiB safe size limit')
+      if (carryBytes > maxLineBytes) {
+        throw new Error(
+          `JSONL line exceeds the ${String(maxLineBytes / (1024 * 1024))} MiB safe size limit`,
+        )
       }
     }
     if (carry.length > 0) consume(carry.join(''), false)

@@ -49,3 +49,28 @@ void test('lines spanning many chunks read back exactly, with their terminated f
     lines.map((line) => [line, true]),
   )
 })
+
+void test('a line over the default bound is refused, and read when the caller raises the bound', async (context) => {
+  const root = await createConversationScratchDirectory(
+    context,
+    'conversation-lf-line-bound-',
+  )
+  const path = join(root, 'long.jsonl')
+  const long = 'x'.repeat(65 * 1024 * 1024)
+  await fs.writeFile(path, `${long}\n`)
+
+  await assert.rejects(
+    forEachLfLine(path, () => undefined),
+    /64 MiB safe size limit/,
+  )
+  let bytes = 0
+  await forEachLfLine(
+    path,
+    (line) => {
+      bytes += line.length
+    },
+    undefined,
+    128 * 1024 * 1024,
+  )
+  assert.equal(bytes, long.length)
+})

@@ -1,5 +1,5 @@
 import { Buffer } from 'node:buffer'
-import { MAX_CONVERSATION_FILE_BYTES } from './constants/MAX_CONVERSATION_FILE_BYTES'
+import { MAX_CONVERSATION_RECORD_BYTES } from './constants/MAX_CONVERSATION_RECORD_BYTES'
 import { conversationRecordFromStored } from './conversationRecordFromStored'
 import { isConversationRecord } from './isConversationRecord'
 
@@ -8,7 +8,7 @@ export const parseStreamedConversationRecord = (
   recordNumber: number,
 ) => {
   if (line.trim() === '') return {}
-  if (Buffer.byteLength(line) > MAX_CONVERSATION_FILE_BYTES) {
+  if (Buffer.byteLength(line) > MAX_CONVERSATION_RECORD_BYTES) {
     return {
       error: `record ${String(recordNumber)} exceeds the safe size limit`,
     }

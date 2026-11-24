@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto'
+import { MAX_CONVERSATION_RECORD_BYTES } from './constants/MAX_CONVERSATION_RECORD_BYTES'
 import { finalizeConversationExportStream } from './finalizeConversationExportStream'
 import { forEachLfLine } from './forEachLfLine'
 import { parseConversationExportManifest } from './parseConversationExportManifest'
@@ -15,21 +16,26 @@ export const streamConversationExport = async (
   let manifest: ConversationExportStreamResult['manifest']
   let records = 0
   let lineNumber = 0
-  await forEachLfLine(path, (line, terminated) => {
-    lineNumber++
-    if (lineNumber === 1) {
-      const parsed = parseConversationExportManifest(line)
-      if ('error' in parsed) errors.push(parsed.error)
-      else manifest = parsed.manifest
-      return
-    }
-    hash.update(`${line}${terminated ? '\n' : ''}`)
-    const parsed = parseStreamedConversationRecord(line, lineNumber - 1)
-    if (parsed.error !== undefined) errors.push(parsed.error)
-    if (parsed.record === undefined) return
-    consume(parsed.record)
-    records++
-  })
+  await forEachLfLine(
+    path,
+    (line, terminated) => {
+      lineNumber++
+      if (lineNumber === 1) {
+        const parsed = parseConversationExportManifest(line)
+        if ('error' in parsed) errors.push(parsed.error)
+        else manifest = parsed.manifest
+        return
+      }
+      hash.update(`${line}${terminated ? '\n' : ''}`)
+      const parsed = parseStreamedConversationRecord(line, lineNumber - 1)
+      if (parsed.error !== undefined) errors.push(parsed.error)
+      if (parsed.record === undefined) return
+      consume(parsed.record)
+      records++
+    },
+    undefined,
+    MAX_CONVERSATION_RECORD_BYTES,
+  )
 
   return finalizeConversationExportStream(
     manifest,
