@@ -15,3 +15,4 @@ allowBuilds:
 
 minimumReleaseAgeExclude:
   - '@syntopica/prettier-config@0.3.0'
+  - 'eslint-plugin-code-policy'
