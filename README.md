@@ -51,6 +51,12 @@ export once that erasure is cut over; their fields are listed in
 change, run `pnpm contract:fixture` and copy the changed files into Atrium in
 the same change.
 
+Assistant text carries a tool call as the line `tool: <Name>` (`<Name>` is the
+block's `name`), alone or on its own line closing the prose that announced it.
+Atrium matches `tool: [A-Za-z0-9_.:-]+` at a line end to drop calls, so the
+wording is part of the contract and
+`scripts/lib/conversations/CONVERSATION_TOOL_CALL_LINE_TEST.ts` pins it.
+
 ## Documents
 
 - [Conversation ownership](docs/architecture/conversation-ownership.md)
